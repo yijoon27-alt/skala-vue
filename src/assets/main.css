@@ -22,14 +22,10 @@ a,
 }
 
 @media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
+  /* Vue 스캐폴드 기본값은 #app 을 2단 그리드(1fr 1fr)로 만들고 body 를 세로 중앙 정렬한다.
+     초기 Welcome 페이지 전용 레이아웃인데, 실습 컴포넌트가 전부 화면 절반에 갇혀서 제거했다.
+     (p.116 Weather Mockup 의 카드 그리드가 1열로 눌리는 문제) */
   #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
   }
 }

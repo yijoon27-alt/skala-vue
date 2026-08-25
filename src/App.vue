@@ -34,6 +34,9 @@ import SampleOne from './components/practices/basic/SampleOne.vue'
 
 // --- Vue Style (p.113~114) ---
 // import VueStyleSample from './components/practices/style/VueStyleSample.vue'
+
+// --- Hands on : Weather Mockup (p.116) ---
+// import WeatherMockup from './components/practices/handson/WeatherMockup.vue'
 </script>
 
 <template>
