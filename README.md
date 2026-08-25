@@ -423,6 +423,183 @@ const bandOf = (temp) => TEMP_BANDS.find((band) => temp >= band.min)
 
 ---
 
+## 적용한 Vue 문법 정리
+
+지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
+
+### 디렉티브
+
+| 문법                                      | 쓴 곳                                                   | 무엇에 썼나                                           |
+| ----------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------- |
+| `v-text` / `v-html`                       | `VTextSample` `VHtmlSample` `VHtmlXssSample`            | 텍스트 출력, HTML 삽입과 XSS 위험 확인                |
+| `v-bind` (`:`)                            | 전 컴포넌트                                             | 속성·클래스·스타일 바인딩, `:key`, `:value`, `:style` |
+| `v-if` / `v-else-if` / `v-else`           | `VIfSample` `WeatherMockup`                             | 로그인 분기, 학점 다중 분기, 25도 기준 라벨           |
+| `v-show`                                  | `VShowSample`                                           | `display:none` 토글 — `v-if` 와의 차이 확인           |
+| `v-for`                                   | `VForSample` `WeatherMockup`                            | 목록 렌더, **중첩 `v-for`**(시간대별 예보)            |
+| `v-model`                                 | `VModelBasic` `VModelFormElements` `VModelModifier`     | 양방향 바인딩, Form 요소 5종 매핑                     |
+| `v-pre` / `v-cloak` / `v-once` / `v-memo` | `VPreSample` `VCloakSample` `VOnceSample` `VMemoSample` | 컴파일 건너뛰기, 깜빡임 방지, 1회 렌더, 조건부 렌더   |
+
+### 이벤트
+
+| 문법                                      | 쓴 곳                                            | 무엇에 썼나                                                  |
+| ----------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| `@click`                                  | 전 컴포넌트                                      | 버튼·카드 클릭                                               |
+| `@input` / `@change`                      | `VOnHandler` `VModelBasic` `WeatherMockup`       | 실시간 입력 vs 확정 시점의 차이                              |
+| `@keydown` / `@keyup`                     | `VOnHandler` `EventObjectSample` `WeatherMockup` | 키 입력 감지, `key` vs `code` 비교                           |
+| `@submit` / `@mouseenter` / `@mouseleave` | `VOnHandler`                                     | 이벤트 8종 발생 시점 비교                                    |
+| `@compositionstart` / `@compositionend`   | `VModelBasic`                                    | **한글 조합(IME) 시작·종료 감지**                            |
+| 이벤트 객체                               | `EventObjectSample`                              | `clientX/pageX/screenX`, `target` vs `currentTarget`, 조합키 |
+
+### 이벤트 수식어
+
+| 수식어                        | 쓴 곳                                 | 무엇에 썼나                           |
+| ----------------------------- | ------------------------------------- | ------------------------------------- |
+| `.prevent`                    | `EventModifierSample` `WeatherMockup` | 링크 이동 차단, 방향키 기본 동작 차단 |
+| `.stop`                       | `EventModifierSample` `WeatherMockup` | 카드 클릭과 버튼 클릭이 겹치지 않게   |
+| `.once` / `.self`             | `EventModifierSample` `WeatherMockup` | 1회만 실행, 모달 배경 클릭으로만 닫기 |
+| `.up` `.down` `.enter` `.esc` | `WeatherMockup`                       | 검색 결과 키보드 이동·선택·초기화     |
+
+### v-model 수식어
+
+| 수식어           | 쓴 곳                             | 무엇에 썼나                                   |
+| ---------------- | --------------------------------- | --------------------------------------------- |
+| `.lazy`          | `VModelModifier`                  | `change` 시점 반영, 한글 조합 가드와의 관계   |
+| `.number`        | `VModelModifier` `VueStyleSample` | 숫자 변환 — `parseFloat` 기반이라는 함정 확인 |
+| `.trim` / 체이닝 | `VModelModifier`                  | 양끝 공백 제거, `.trim.number` 조합           |
+
+### 데이터 · 반응형
+
+| 문법                         | 쓴 곳                            | 무엇에 썼나                                                     |
+| ---------------------------- | -------------------------------- | --------------------------------------------------------------- |
+| `ref()`                      | 전 컴포넌트                      | 반응형 상태 — 일반 변수와의 차이는 `SampleOne` 에서 확인        |
+| `computed()`                 | `VForSample` `WeatherMockup` 외  | 검색 필터, 정렬, 평균·최고·최저 집계, 파생 상태                 |
+| `onMounted()` / `nextTick()` | `VueStyleSample` `WeatherMockup` | `data-v-` 속성 읽기, 모달 포커스 이동                           |
+| `useTemplateRef()`           | `VueStyleSample` `WeatherMockup` | DOM 엘리먼트 직접 참조                                          |
+| 배열 메서드                  | `VForSample` `WeatherMockup`     | `filter` `toSorted` `reduce` `find` `localeCompare`             |
+| 객체 배열                    | `WeatherMockup`                  | 도시 8곳 · 기온/습도/미세먼지/체감온도/시간대별 예보(중첩 배열) |
+
+### 스타일
+
+| 문법                      | 쓴 곳            | 무엇에 썼나                                      |
+| ------------------------- | ---------------- | ------------------------------------------------ |
+| `<style scoped>`          | 전 컴포넌트      | 컴포넌트 단위 스타일 격리                        |
+| `:deep()`                 | `VueStyleSample` | scoped 상태로 자식 컴포넌트 내부까지 스타일 적용 |
+| CSS `v-bind()`            | `VueStyleSample` | JS 상태를 CSS가 직접 참조 (컬러피커·슬라이더)    |
+| `@import` 외부 CSS        | `VueStyleSample` | `challenge.css` 전역 로드                        |
+| `:style` 로 CSS 변수 주입 | `WeatherMockup`  | `v-for` 카드마다 다른 색 (`--band`)              |
+
+---
+
+## 트러블슈팅 기록
+
+실습하면서 **실제로 막혔던 것들**과 원인·해결을 남긴다.
+
+### 1. 교재 코드 그대로 쓰면 컴파일 에러 — `v-pre`
+
+`VHtmlSample` / `VTextSample` 에서 교재대로 `<h3>{{ }}</h3>` 를 쓰면 Vue가 이걸
+**실제 보간 표현식으로 컴파일하려다 에러**가 난다. 중괄호를 문자 그대로 보여주려는 의도였으므로
+`v-pre` 를 붙여 컴파일을 건너뛰게 했다.
+
+### 2. 스마트따옴표 오타 — `from 'vue’`
+
+`VForSample` 의 교재 코드에 닫는 따옴표가 `’`(스마트따옴표)로 들어가 있었다.
+PDF에서 복사한 코드는 따옴표·하이픈이 유니코드 문자로 바뀌어 있을 수 있으니 확인이 필요하다.
+
+### 3. `@import` 대상 파일이 교재에 없음
+
+교재 p.114가 `@import '@/assets/challenge.css'` 를 쓰는데 **파일 내용이 교재에 없다.**
+직접 작성했고, `npm run build` 로 확인해 보니 `scoped` 없는 블록이라 `data-v-` 없이
+**전역 규칙으로 번들에 들어간다.**
+
+### 4. 체크박스 `value` 를 빠뜨리면 화면과 데이터가 따로 논다
+
+**증상** — 다중 체크박스에 `value` 를 안 쓰면 체크하는 순간 표시가 도로 꺼지고,
+두 번째부터는 체크 표시만 켜진 채 데이터는 `["on"]` 하나로 고정된다.
+
+**원인** — `vModelCheckbox` 가 값을 **넣을 때**와 체크 표시를 **되돌릴 때** 서로 다른 곳을 본다.
+
+```js
+const elementValue = getValue(el) // el.value → "on"
+checked = looseIndexOf(value, vnode.props.value) > -1 // value 속성 없으면 undefined
+```
+
+배열에 `"on"` 을 넣어 놓고 `undefined` 를 찾으니 항상 `-1` 이다.
+
+**해결** — 다중 체크박스에는 `value` 를 반드시 준다.
+
+### 5. `.number` 를 믿으면 안 된다
+
+**증상** — `.number` 를 썼는데 `typeof` 가 입력에 따라 `number` 였다 `string` 이었다 한다.
+
+**원인** — Vue가 쓰는 건 `Number()` 가 아니라 `parseFloat` 기반 `looseToNumber` 다.
+`"12abc"` → `12`(에러 없이 통과), `"abc"` → `"abc"`(문자열 그대로), `""` → `""`(0 아님).
+
+**해결** — 서버로 보내기 전에 `typeof` 검사를 따로 한다.
+그리고 `<input type="number">` 는 `.number` 없이도 자동 변환되므로 중복해서 쓸 필요가 없다.
+
+### 6. CSS `v-bind()` 를 `v-for` 카드에 못 쓴다
+
+**증상** — 카드마다 온도에 따라 다른 색을 주려고 `v-bind()` 를 썼는데 전부 같은 색이 된다.
+
+**원인** — `v-bind()` 는 **컴포넌트 인스턴스 단위**로 CSS 변수를 만든다.
+`v-for` 로 찍어낸 엘리먼트마다 다른 값을 줄 수 없다.
+
+**해결** — `:style="{ '--band': 색 }"` 로 **엘리먼트마다 CSS 변수를 직접 주입**하고
+CSS에서 `var(--band)` 로 받았다. 같은 CSS 변수라도 주입 경로가 다르다.
+
+### 7. 초성 검색 오탐 — `"서"` 가 수원·부산까지 잡힘
+
+**증상** — `이름초성.includes(검색어초성)` 으로 짰더니 `"서"` 를 치면 수원·부산도 걸린다.
+
+**원인** — `"서"` 의 초성 `ㅅ` 이 `"수원"(ㅅㅇ)`, `"부산"(ㅂㅅ)` 안에 들어 있다.
+**완성된 글자를 초성으로 바꿔서 비교하면 안 된다.**
+
+**해결** — 글자 단위로 미끄러뜨리며 **낱자음이면 초성과, 완성 글자면 글자끼리** 비교하도록 고쳤다.
+덤으로 `"강ㄹ"` 처럼 **한글 조합 도중에 실제로 나오는 형태**도 강릉에 매칭된다.
+
+### 8. `@keydown.esc` 가 안 먹는다
+
+**증상** — 모달에 `@keydown.esc` 를 걸었는데 Esc를 눌러도 반응이 없다.
+
+**원인** — 키보드 이벤트는 **포커스된 엘리먼트**에서 발생한다. 모달을 열어도 포커스는 그대로다.
+
+**해결** — 배경에 `tabindex="-1"` 을 주고, 열 때 `nextTick(() => el.focus())` 로 포커스를 옮겼다.
+
+### 9. 방향키를 누르면 입력 커서가 튄다
+
+`@keydown.up` / `@keydown.down` 만 걸면 목록 이동과 함께
+**입력창 커서가 문자열 끝/처음으로 이동하는 기본 동작**이 같이 일어난다.
+`.prevent` 를 체이닝(`@keydown.up.prevent`)해서 막았다.
+
+### 10. 카드 그리드가 1열로 눌린다
+
+**원인** — Vue 스캐폴드의 `main.css` 가 `@media (min-width: 1024px)` 에서
+`#app` 을 2단 그리드(`1fr 1fr`)로 만든다. 초기 Welcome 페이지 전용 설정이라
+**모든 실습 컴포넌트가 화면 절반에 갇혀 있었다.**
+
+**해결** — 해당 규칙을 제거했다.
+
+### 11. `<strong>` 이 굵게 안 나온다
+
+**원인** — 스캐폴드 `base.css` 의 전역 리셋에 `font-weight: normal` 이 있어서
+`<strong>` / `<b>` 까지 눌러 버린다. **실습 컴포넌트 11개 / 97군데의 강조가 전부 무효**였다.
+
+```css
+*,
+*::before,
+*::after {
+  font-weight: normal;
+} /* ← 여기 */
+```
+
+**해결** — `strong, b { font-weight: 700 }` 로 의미 태그의 굵기만 되살렸다.
+
+### 12. `alert()` 은 브라우저를 멈춰 세운다
+
+`window.alert` 이 뜨면 **모든 후속 동작이 차단**돼서 여러 이벤트가 어떤 순서로 발생하는지
+관찰할 수도, 화면을 자동으로 검증할 수도 없다.
+그래서 개인 응용에서는 alert 대신 **화면 로그 패널**이나 **커스텀 모달**을 썼다.
+
 ## 품질 관리
 
 작업 후 아래 항목을 확인한다.
