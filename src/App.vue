@@ -1,0 +1,30 @@
+<script setup>
+// 실습할 컴포넌트를 하나씩 바꿔가며 확인한다.
+// (아래 import 주석을 풀고, template의 태그도 같이 바꿔줄 것)
+
+// --- Dev Setup (p.70~71) ---
+import SampleOne from './components/practices/basic/SampleOne.vue'
+// import SampleTwo from './components/practices/basic/SampleTwo.vue'
+
+// --- Vue Directive (p.74~92) ---
+// import VHtmlSample from './components/practices/directive/VHtmlSample.vue'
+// import VHtmlXssSample from './components/practices/directive/VHtmlXssSample.vue'
+// import VTextSample from './components/practices/directive/VTextSample.vue'
+// import VBindBasic from './components/practices/directive/VBindBasic.vue'
+// import VBindClass from './components/practices/directive/VBindClass.vue'
+// import VBindStyle from './components/practices/directive/VBindStyle.vue'
+// import VBindShorthand from './components/practices/directive/VBindShorthand.vue'
+// import VIfSample from './components/practices/directive/VIfSample.vue'
+// import VShowSample from './components/practices/directive/VShowSample.vue'
+// import VForSample from './components/practices/directive/VForSample.vue'
+// import VPreSample from './components/practices/directive/VPreSample.vue'
+// import VCloakSample from './components/practices/directive/VCloakSample.vue'
+// import VOnceSample from './components/practices/directive/VOnceSample.vue'
+// import VMemoSample from './components/practices/directive/VMemoSample.vue'
+</script>
+
+<template>
+  <div style="padding: 20px">
+    <SampleOne />
+  </div>
+</template>
