@@ -249,7 +249,7 @@ const TEMP_BANDS = [
   { min: 35, emoji: '🥵', label: '폭염경보', color: '#c0392b', note: '기상청 폭염경보 기준' },
   { min: 33, emoji: '🔥', label: '폭염주의보', color: '#e74c3c', note: '기상청 폭염주의보 기준' },
   { min: 28, emoji: '☀️', label: '더움', color: '#e67e22', note: '' },
-  { min: 25, emoji: '🌤️', label: '조금 더움', color: '#f39c12', note: '교재 기준선 (25도 이상)' },
+  { min: 25, emoji: '🌤️', label: '조금 더움', color: '#f39c12', note: '' },
   { min: 15, emoji: '🍃', label: '선선함', color: '#27ae60', note: '' },
   { min: 5, emoji: '🧥', label: '쌀쌀함', color: '#2980b9', note: '' },
   { min: -12, emoji: '❄️', label: '추움', color: '#8e44ad', note: '' },
@@ -353,19 +353,11 @@ const closeModal = () => (modalCity.value = null)
   <div class="weather-app">
     <header class="app-header">
       <h2>🌤️ 지역별 날씨 현황</h2>
-      <p class="subtitle">Hands on — Weather Mockup (교재 p.116)</p>
-      <p class="legend">
-        <span class="tag tag-base">기능 구현</span> 교재 요구사항 그대로
-        <span class="tag tag-plus">추가 기능</span> 직접 얹은 부분
-      </p>
+      <p class="subtitle">Vue 3 · 지역별 날씨 대시보드</p>
     </header>
 
     <!-- ───────── 요구사항 3 : 한글 검색 (:value + @input) ─────────
          🔧 개인 응용 ⑩ 초성 검색 · ⑪ 키보드 네비게이션이 여기에 통합돼 있다 -->
-    <p class="area-label">
-      <span class="tag tag-base">기능 구현</span> 도시 검색 (요구사항 3)
-      <span class="tag tag-plus">추가 기능</span> 초성 검색 · 키보드 이동
-    </p>
     <section class="search-bar">
       <input
         type="text"
@@ -395,7 +387,6 @@ const closeModal = () => (modalCity.value = null)
     <p class="status-bar">{{ statusMessage }}</p>
 
     <!-- ───────── 🔧 개인 응용 ⑬ : 집계 대시보드 + 정렬 ───────── -->
-    <p v-if="stats" class="area-label"><span class="tag tag-plus">추가 기능</span> 집계 · 정렬</p>
     <section v-if="stats" class="dashboard">
       <div class="stat">
         <span class="stat-label">표시 중</span>
@@ -424,10 +415,6 @@ const closeModal = () => (modalCity.value = null)
     </section>
 
     <!-- ───────── 요구사항 1 : v-for + :key="id" ───────── -->
-    <p class="area-label">
-      <span class="tag tag-base">기능 구현</span> 카드 목록 · 25도 라벨 · 상세보기 (요구사항 1·2·4)
-      <span class="tag tag-plus">추가 기능</span> 온도 구간 · 시간대별 그래프 · 모달
-    </p>
     <section class="card-grid">
       <article
         v-for="(city, index) in visibleList"
@@ -454,7 +441,6 @@ const closeModal = () => (modalCity.value = null)
 
         <!-- 🔧 개인 응용 ⑫ : 조건문 대신 구간 테이블에서 find() -->
         <p class="band-chip">
-          <span class="tag tag-plus tag-mini">추가</span>
           {{ bandOf(city.temp).emoji }} {{ bandOf(city.temp).label }}
           <span v-if="bandOf(city.temp).note" class="band-note">
             {{ bandOf(city.temp).note }}
@@ -493,9 +479,9 @@ const closeModal = () => (modalCity.value = null)
         <!-- 요구사항 4 : 버블링 없이(.stop) 상세보기 -->
         <footer class="card-foot">
           <button class="btn-alert" @click.stop="showDetail(city.name, city.status)">
-            상세보기 (교재 · alert)
+            알림창으로 보기
           </button>
-          <button class="btn-modal" @click.stop="openModal(city)">상세보기 (모달)</button>
+          <button class="btn-modal" @click.stop="openModal(city)">상세보기</button>
         </footer>
       </article>
 
@@ -538,94 +524,63 @@ const closeModal = () => (modalCity.value = null)
             <dd>{{ modalCity.pm10 }} ({{ pmGradeOf(modalCity.pm10).label }})</dd>
           </div>
         </dl>
-        <p class="modal-hint">
-          회색 배경을 클릭하거나(<code>@click.self</code>)
-          <kbd>Esc</kbd>(<code>@keydown.esc</code>)로 닫을 수 있습니다.
-        </p>
+        <p class="modal-hint">회색 배경을 클릭하거나 <kbd>Esc</kbd> 를 눌러 닫을 수 있습니다.</p>
       </div>
     </div>
 
     <!-- ───────── 구현 정리 ───────── -->
     <section class="spec">
-      <h3><span class="tag tag-base">기능 구현</span> 교재 요구사항 (p.116)</h3>
-      <ol class="spec-list">
+      <h3>✅ 기본 기능 체크리스트</h3>
+      <ul class="check-list">
+        <li><strong>도시 카드 목록</strong> — 날씨 데이터를 카드로 반복 출력하고 고유 id로 관리</li>
+        <li><strong>기온별 라벨</strong> — 25도를 기준으로 더움 / 선선함을 자동 구분</li>
+        <li><strong>한글 검색</strong> — 한글 입력을 실시간으로 받아 처리하고 입력값을 표시</li>
+        <li><strong>카드 선택</strong> — 클릭한 도시를 상태바에 표시</li>
+        <li><strong>상세보기</strong> — 카드 선택과 겹치지 않도록 이벤트 전파를 차단</li>
         <li>
-          <strong>배열 렌더링</strong> — <code>v-for</code> + <code>:key="city.id"</code>
-          <span class="ok">✅</span>
-        </li>
-        <li>
-          <strong>조건부 렌더링</strong> — 25도 기준 <code>v-if</code> / <code>v-else</code>
-          <span class="ok">✅</span>
-        </li>
-        <li>
-          <strong>양방향 바인딩 · 한글 처리</strong> — <code>:value</code> + <code>@input</code>,
-          입력한 검색어 출력 <span class="ok">✅</span>
-        </li>
-        <li>
-          <strong>이벤트 · 수식어</strong> — 카드 클릭 시 상태바 표기 / [상세보기]는
-          <code>@click.stop</code> 으로 버블링 없이 <code>window.alert</code>
-          <span class="ok">✅</span>
-        </li>
-        <li>
-          <strong>본인 데이터 추가</strong> — 도시 5개와 습도·미세먼지·체감온도·시간대별 예보 필드
-          추가 <span class="ok">✅</span>
-        </li>
-      </ol>
-
-      <h3><span class="tag tag-plus">추가 기능</span> 직접 구현한 부분</h3>
-      <ul class="custom-list">
-        <li>
-          <strong>⑩ 한글 초성 검색</strong> — 요구사항 3은 "검색어 출력"까지만 요구한다. 실제
-          필터링에 더해 <code>ㅅㅇ → 서울</code> 초성 검색을 구현했다. 완성형 한글이
-          <code>0xAC00</code> 부터 <code>초성 × 588</code> 간격으로 배열된다는 점을 이용한다.
-          <strong>초성 검색은 <code>v-model</code> 로는 원리상 불가능하다</strong>
-          — 조합이 끝나지 않은 <code>ㅅ</code> 을 조합 가드가 삼키기 때문이다. 요구사항 3이 굳이
-          <code>:value</code> + <code>@input</code> 을 지정한 이유가 이것이다. 같은 계산식 (<code
-            >% 28</code
-          >)으로 받침을 판별해 <strong>조사도 자동 처리</strong>했다 — 교재 문구 그대로면 "제주<u
-            >이</u
-          >
-          선택되었습니다"가 된다.
-        </li>
-        <li>
-          <strong>⑪ 키보드 네비게이션</strong> — 교재 p.103~104에 키보드·시스템·마우스 수식어가 표로
-          정리돼 있지만 <strong>예제 코드가 하나도 없다.</strong> 게다가 p.103 표는
-          <code>.up</code>/<code>.down</code> 의 활용 예시를 "자동완성 검색어 목록에서 화살표로
-          리스트 이동할 때"라고 적어 두었는데, 이 도시 검색이 정확히 그 상황이라 그대로 구현했다.
-          (<code>.up</code> <code>.down</code> <code>.enter</code> <code>.esc</code>)
-        </li>
-        <li>
-          <strong>⑫ 온도 구간을 데이터로</strong> — <code>v-else-if</code> 다단계는 이미
-          <code>VIfSample</code>(p.79)에 있으므로 단계만 늘리는 건 응용이 아니다. 조건문 체인을
-          걷어내고 <strong>구간 테이블 + <code>find()</code></strong> 로 바꿨다. 기준값은 기상청
-          폭염·한파 특보 기준을 따랐다.
-        </li>
-        <li>
-          <strong>⑬ 정렬 · 집계 · 중첩 <code>v-for</code></strong> — <code>computed</code> 로
-          평균/최고/최저를 내고 <code>toSorted()</code> 로 4가지 정렬을 붙였다. 시간대별 예보는
-          <strong>배열 안의 배열</strong>이라 중첩 <code>v-for</code> 로 렌더한다 (교재에 없는
-          형태).
-        </li>
-        <li>
-          <strong>⑭ <code>alert</code> 대신 모달</strong> — 요구사항 4가
-          <code>window.alert</code> 을 지정하므로 교재 버튼은 그대로 두고 모달 버전을 나란히 뒀다.
-          배경 클릭 닫기는 <code>@click.self</code>, Esc 닫기는 <code>@keydown.esc</code> 다.
-          <code>alert</code> 은 <strong>브라우저를 통째로 멈춰 세워서</strong> 스타일을 줄 수도,
-          자동화 테스트를 이어갈 수도 없다.
+          <strong>날씨 데이터</strong> — 도시 8곳 · 기온 / 습도 / 미세먼지 / 체감온도 / 시간대별
+          예보
         </li>
       </ul>
 
-      <h3>
-        <span class="tag tag-plus">추가 기능</span> CSS 변수를 <code>:style</code> 로 주입한 이유
-      </h3>
-      <p class="spec-note">
-        p.113 개인 응용 ⑨ 에서 배운 CSS <code>v-bind()</code> 를 카드 색에 쓰려다 막혔다.
-        <code>v-bind()</code> 는 <strong>컴포넌트 인스턴스 단위</strong>로 CSS 변수를 만들기 때문에,
-        <code>v-for</code> 로 찍어낸 카드마다 다른 색을 줄 수가 없다. 그래서
-        <code>:style="{ '--band': … }"</code> 로
-        <strong>엘리먼트마다 CSS 변수를 직접 주입</strong>하고 CSS에서 <code>var(--band)</code> 로
-        받았다. 같은 CSS 변수라도 주입 경로가 다르다.
-      </p>
+      <h3>✨ 추가 기능</h3>
+      <p class="spec-sub">기본 기능 위에 직접 설계해서 얹은 부분입니다.</p>
+      <ul class="plus-list">
+        <li>
+          <strong>한글 초성 검색</strong> — <code>ㅅㅇ</code> 만 입력해도 서울·수원이 검색됩니다.
+          완성형 한글의 코드값을 분해해 초성을 뽑고, <strong>글자 단위로 비교</strong>해
+          <code>서</code> 가 수원·부산까지 잡는 오탐을 막았습니다. 한글을 조합하는 도중에 나오는
+          <code>강ㄹ</code> 같은 형태도 강릉에 매칭됩니다.
+        </li>
+        <li>
+          <strong>조사 자동 처리</strong> — 받침 유무를 판별해 "서울<u>이</u> 선택되었습니다" /
+          "제주<u>가</u> 선택되었습니다" 를 알아서 골라 씁니다.
+        </li>
+        <li>
+          <strong>키보드 네비게이션</strong> — <kbd>↑</kbd> <kbd>↓</kbd> 로 카드 이동,
+          <kbd>Enter</kbd> 로 선택, <kbd>Esc</kbd> 로 검색 초기화.
+        </li>
+        <li>
+          <strong>온도 구간 8단계</strong> — 기상청 폭염·한파 특보 기준으로 구간을 나누고, 구간별
+          색을 카드 전체에 반영합니다.
+        </li>
+        <li>
+          <strong>시간대별 기온 그래프</strong> — 카드마다 3시간 간격 예보를 막대그래프로 그리고,
+          막대마다 해당 온도의 구간 색을 입혔습니다.
+        </li>
+        <li>
+          <strong>정렬 · 집계</strong> — 기온 / 미세먼지 / 가나다 4가지 정렬과 평균·최고·최저 자동
+          계산.
+        </li>
+        <li>
+          <strong>미세먼지 등급</strong> — 수치에 따라 좋음 / 보통 / 나쁨 / 매우나쁨을 색으로
+          구분합니다.
+        </li>
+        <li>
+          <strong>상세 모달</strong> — 배경 클릭 또는 <kbd>Esc</kbd> 로 닫히는 모달. 알림창과 달리
+          화면을 멈추지 않습니다.
+        </li>
+      </ul>
     </section>
   </div>
 </template>
@@ -643,47 +598,6 @@ const closeModal = () => (modalCity.value = null)
   margin: 0 0 8px;
   color: #7f8c8d;
   font-size: 13px;
-}
-
-/* ───── 기능 구현 / 추가 기능 태그 ───── */
-.tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: bold;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-.tag-base {
-  background-color: #dfe6e9;
-  color: #2d3436;
-}
-.tag-plus {
-  background-color: #42b883;
-  color: #fff;
-}
-.tag-mini {
-  padding: 1px 6px;
-  font-size: 10px;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 18px;
-  color: #7f8c8d;
-  font-size: 12px;
-}
-.area-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin: 22px 0 8px;
-  color: #7f8c8d;
-  font-size: 12px;
 }
 
 /* ───── 검색 ───── */
@@ -1013,27 +927,31 @@ kbd {
   border-top: 2px dashed #ccc;
 }
 .spec h3 {
+  margin-bottom: 6px;
   color: #42b883;
   font-size: 15px;
 }
-.spec-list,
-.custom-list {
+.spec-sub {
+  margin: 0 0 8px;
+  color: #7f8c8d;
+  font-size: 12px;
+}
+.check-list,
+.plus-list {
+  margin: 0 0 26px;
   padding-left: 20px;
   font-size: 13px;
   line-height: 1.9;
 }
-.spec-list li,
-.custom-list li {
-  margin-bottom: 8px;
+.check-list li,
+.plus-list li {
+  margin-bottom: 6px;
 }
-.ok {
-  margin-left: 4px;
+.check-list li strong,
+.plus-list li strong {
+  color: #2c3e50;
 }
-.spec-note {
-  padding: 10px 12px;
-  background-color: #fff8e1;
-  border-left: 4px solid #f1c40f;
-  font-size: 13px;
-  line-height: 1.9;
+.check-list {
+  list-style: '✅  ';
 }
 </style>

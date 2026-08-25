@@ -58,6 +58,13 @@
   font-weight: normal;
 }
 
+/* 위 전역 리셋의 font-weight: normal 이 <strong>/<b> 까지 눌러 버려서
+   강조가 화면에 전혀 반영되지 않았다. 의미 태그의 굵기만 되살린다. */
+strong,
+b {
+  font-weight: 700;
+}
+
 body {
   min-height: 100vh;
   color: var(--color-text);
