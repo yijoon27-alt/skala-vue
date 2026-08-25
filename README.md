@@ -30,7 +30,8 @@ src/
 │     ├─ event/               # Vue Event Handling (p.94~105)
 │     ├─ form/                # Form Data Binding (p.106~112)
 │     ├─ style/               # Vue Style (p.113~114)
-│     └─ handson/             # Hands on — Weather Mockup (p.116)
+│     ├─ composition/         # Composition API (p.117~144)
+│     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 ├─ assets/ · router/ · stores/ · views/
 ```
 
@@ -423,6 +424,110 @@ const bandOf = (temp) => TEMP_BANDS.find((band) => temp >= band.min)
 
 ---
 
+### 6. Composition API (p.117~145)
+
+Code Challenge **p.126 (Reactive State)** · **p.144 (Computed & Watchers)** 는 교재 예제 원본으로
+간결하게 작성하고, **개인 응용은 단원 마지막 Hands on (p.145) 한 곳에 몰아넣었다.**
+교재 p.145 요구사항 5 자체가 "본인만의 반응형 상태 변수, Computed, Watcher를 추가한다" 이기 때문이다.
+
+| 교재      | 실습 내용                             | 파일                                          |
+| --------- | ------------------------------------- | --------------------------------------------- |
+| p.122     | `ref()` — 원시값 · 배열 · 객체 반응형 | `practices/composition/RefBasic.vue`          |
+| p.124     | `reactive()` — 객체 · 배열 반응형     | `practices/composition/ReactiveBasic.vue`     |
+| p.128     | `computed()` — 캐싱 vs 일반 함수      | `practices/composition/ComputedBasic.vue`     |
+| p.131     | `watch()` — 이전/현재 값 콜백         | `practices/composition/WatchBasic.vue`        |
+| p.133     | `watch()` Multi-Source — 배열로 묶기  | `practices/composition/WatchMultiSource.vue`  |
+| p.135~136 | `watch()` Deep — `{ deep: true }`     | `practices/composition/WatchDeep.vue`         |
+| p.138~139 | `watch()` + `reactive()` 감시 규칙    | `practices/composition/WatchReactive.vue`     |
+| p.142     | `watchEffect()` — 자동 의존성 추적    | `practices/composition/WatchEffectSample.vue` |
+| **p.145** | **Hands on — Weather Composition**    | `practices/handson/WeatherComposition.vue`    |
+
+**교재 요구사항 1~4 충족 (p.145)**
+
+| 요구사항 | 구현                                                                  |
+| -------- | --------------------------------------------------------------------- |
+| 1        | `searchQuery` · `selectedCityInfo` · `weatherList` 를 `ref()` 로 선언 |
+| 2        | `filteredWeatherList` — 도시 이름에 검색어가 포함된 항목만 `computed` |
+| 3        | `watch(selectedCityInfo, …)` 콘솔 로그 + `watchEffect` 로 검색어 추적 |
+| 4        | 검색어 없음 / 결과 있음 / 결과 없음 3분기 렌더                        |
+
+#### Customization ⑮ 디바운스 조회 — `onCleanup` 으로 이전 요청 취소
+
+`watchEffect` 콜백의 첫 인자 `onCleanup` 은 **다음 실행 직전**에 호출된다.
+여기서 아직 날아가지 않은 요청을 취소하지 않으면
+**늦게 도착한 옛날 응답이 최신 결과를 덮어쓰는** 사고가 난다.
+
+```js
+watchEffect((onCleanup) => {
+  const timer = setTimeout(() => {
+    /* 조회 */
+  }, 400)
+  onCleanup(() => clearTimeout(timer)) // ← 실제 API 라면 AbortController.abort()
+})
+```
+
+"서울" 을 두 글자로 치면 **요청 2 · 취소 1 · 완료 1** 이 화면 우측에 그대로 집계된다.
+교재 p.141 은 watchEffect 를 "자동 추적" 편의 기능으로만 소개하고 뒷정리는 다루지 않는다.
+
+#### Customization ⑯ 쓰기 가능한 `computed` — 섭씨 ↔ 화씨
+
+교재 p.127 은 "computed 로 만든 속성은 **기본적으로** 읽기 전용" 에서 끝난다.
+콜백 대신 `{ get, set }` 을 넘기면 **`v-model` 을 걸 수 있는 computed** 가 된다.
+내부 상태는 `isFahrenheit` boolean 하나로 두고, 화면에는 '섭씨'/'화씨' 라는 말로 오간다.
+
+```js
+const unitLabel = computed({
+  get: () => (isFahrenheit.value ? '화씨' : '섭씨'),
+  set: (label) => {
+    isFahrenheit.value = label === '화씨'
+  },
+})
+```
+
+#### Customization ⑰ 조건 묶음 감시 — 같은 tick 이면 조회는 한 번
+
+여러 소스를 배열로 묶는 진짜 이유는 코드가 짧아져서가 아니라 **콜백이 도는 횟수** 때문이다.
+감시자를 따로 두면 두 값이 같은 순간에 바뀔 때 콜백이 두 번 돌아 **API 도 두 번** 나간다.
+
+- `watch(sortKey)` + `watch(statusFilter)` → 동시 변경 시 **2회**
+- `watch([sortKey, statusFilter])` → 동시 변경 시 **1회**
+
+"정렬 + 날씨 동시 변경" 버튼을 누르면 두 숫자가 갈라지는 것이 화면에 그대로 보인다.
+필터 초기화처럼 값 여러 개를 한꺼번에 되돌리는 동작에서 중복 요청이 생기느냐가 여기서 갈린다.
+
+#### Customization ⑱ 즐겨찾기 변경 이력 — `deep` 감시 + 스냅샷
+
+교재 p.134 는 "deep 을 쓰면 `newValue` 와 `oldValue` 가 똑같이 나와 과거를 추적할 수 없다" 에서 멈춘다.
+과거가 필요하면 **감시자 밖에 스냅샷을 따로 들고 있으면 된다.**
+
+```js
+let snapshot = structuredClone(toRaw(favorites.value))
+watch(
+  favorites,
+  (newVal) => {
+    /* snapshot 과 대조해 "무엇이 어떻게" 바뀌었는지 뽑는다 */
+    snapshot = structuredClone(toRaw(newVal))
+  },
+  { deep: true },
+)
+```
+
+★ 를 누를 때마다 "대구 즐겨찾기 추가" 처럼 **변경 이력**이 쌓인다.
+되돌리기(Undo), "저장하지 않고 나가시겠습니까?" 경고가 전부 이 구조다.
+
+#### Customization ⑲ `computed` 3단 체인 + 재계산 계기판
+
+`검색 필터 → 날씨 필터 → 정렬 → 통계` 로 단계를 나누면
+앞 단계 결과가 그대로일 때 **뒷 단계는 다시 계산되지 않는다.**
+그 캐싱을 눈으로 볼 수 있게 각 단계의 실행 횟수를 화면 하단 계기판에 띄웠다.
+
+> ⚠️ 이때 카운터를 `ref` 로 잡으면 **무한 루프**가 된다.
+> computed 게터 안에서 반응형 값을 바꾸면 → 화면이 다시 그려지고 → 게터가 또 돈다.
+> 그래서 카운터는 일반 변수로 두고, 템플릿에서 함수로 읽는다
+> (일반 함수가 매 렌더 재실행된다는 p.128 의 성질을 거꾸로 이용한 것이다).
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -469,14 +574,21 @@ const bandOf = (temp) => TEMP_BANDS.find((band) => temp >= band.min)
 
 ### 데이터 · 반응형
 
-| 문법                         | 쓴 곳                            | 무엇에 썼나                                                     |
-| ---------------------------- | -------------------------------- | --------------------------------------------------------------- |
-| `ref()`                      | 전 컴포넌트                      | 반응형 상태 — 일반 변수와의 차이는 `SampleOne` 에서 확인        |
-| `computed()`                 | `VForSample` `WeatherMockup` 외  | 검색 필터, 정렬, 평균·최고·최저 집계, 파생 상태                 |
-| `onMounted()` / `nextTick()` | `VueStyleSample` `WeatherMockup` | `data-v-` 속성 읽기, 모달 포커스 이동                           |
-| `useTemplateRef()`           | `VueStyleSample` `WeatherMockup` | DOM 엘리먼트 직접 참조                                          |
-| 배열 메서드                  | `VForSample` `WeatherMockup`     | `filter` `toSorted` `reduce` `find` `localeCompare`             |
-| 객체 배열                    | `WeatherMockup`                  | 도시 8곳 · 기온/습도/미세먼지/체감온도/시간대별 예보(중첩 배열) |
+| 문법                         | 쓴 곳                                    | 무엇에 썼나                                                     |
+| ---------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
+| `ref()`                      | 전 컴포넌트                              | 반응형 상태 — 일반 변수와의 차이는 `SampleOne` 에서 확인        |
+| `computed()`                 | `VForSample` `WeatherMockup` 외          | 검색 필터, 정렬, 평균·최고·최저 집계, 파생 상태                 |
+| `onMounted()` / `nextTick()` | `VueStyleSample` `WeatherMockup`         | `data-v-` 속성 읽기, 모달 포커스 이동                           |
+| `useTemplateRef()`           | `VueStyleSample` `WeatherMockup`         | DOM 엘리먼트 직접 참조                                          |
+| 배열 메서드                  | `VForSample` `WeatherMockup`             | `filter` `toSorted` `reduce` `find` `localeCompare`             |
+| 객체 배열                    | `WeatherMockup`                          | 도시 8곳 · 기온/습도/미세먼지/체감온도/시간대별 예보(중첩 배열) |
+| `reactive()`                 | `ReactiveBasic` `WatchReactive`          | 객체·배열 반응형, 재할당 시 반응성이 끊기는 특성 확인           |
+| `computed({ get, set })`     | `WeatherComposition`                     | 섭씨 ↔ 화씨 단위 전환을 `v-model` 하나로 양방향 처리            |
+| `watch()`                    | `WatchBasic` `WeatherComposition`        | 선택 도시 변경 감지, 이전/현재 값 콜백                          |
+| `watch([a, b])`              | `WatchMultiSource` `WeatherComposition`  | 정렬·필터 묶음 감시로 중복 조회 차단                            |
+| `watch(…, { deep: true })`   | `WatchDeep` `WeatherComposition`         | 객체 하위 속성 감시 + 스냅샷 대조로 변경 이력 기록              |
+| `watchEffect()`              | `WatchEffectSample` `WeatherComposition` | 검색어 자동 추적, `onCleanup` 으로 이전 요청 취소               |
+| `toRaw()`                    | `WeatherComposition`                     | 반응형 프록시를 벗겨 `structuredClone` 으로 스냅샷 뜨기         |
 
 ### 스타일
 
@@ -599,6 +711,26 @@ CSS에서 `var(--band)` 로 받았다. 같은 CSS 변수라도 주입 경로가 
 `window.alert` 이 뜨면 **모든 후속 동작이 차단**돼서 여러 이벤트가 어떤 순서로 발생하는지
 관찰할 수도, 화면을 자동으로 검증할 수도 없다.
 그래서 개인 응용에서는 alert 대신 **화면 로그 패널**이나 **커스텀 모달**을 썼다.
+
+### 13. `structuredClone(반응형객체)` 는 DataCloneError
+
+`deep` 감시에서 이전 값을 남기려고 `structuredClone(favorites.value)` 를 불렀더니
+**`DataCloneError: could not be cloned`** 가 났다.
+`ref`/`reactive` 로 감싼 값은 **`Proxy`** 라서 구조화 복제 알고리즘이 복사하지 못한다.
+`toRaw()` 로 **프록시를 벗겨 원본을 꺼낸 뒤** 복사해야 한다.
+
+```js
+structuredClone(toRaw(favorites.value)) // 🟢
+```
+
+### 14. 실행 횟수 카운터를 `ref` 로 잡으면 무한 루프
+
+`computed` 재연산 횟수를 세려고 카운터를 `ref` 로 잡았더니 화면이 멈췄다.
+게터 안에서 반응형 값을 바꾸면 → 화면이 다시 그려지고 → 게터가 다시 돌아
+**렌더 루프**가 된다. 카운터는 반응형이 아닌 **일반 변수(`let`)** 로 두고,
+템플릿에서 함수로 호출해 매 렌더마다 새로 읽게 했다.
+같은 이유로 `watchEffect` 안에서 `reactive` 값을 `++` 하는 것도 위험하다 —
+`++` 는 "읽고 나서 쓰는" 연산이라 그 값이 감시 목록에 등록되기 때문이다.
 
 ## 품질 관리
 

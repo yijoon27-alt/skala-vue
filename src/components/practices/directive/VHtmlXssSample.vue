@@ -35,7 +35,9 @@ const payloads = [
   {
     id: 'script',
     label: '③ script 태그 (실행 안 됨)',
-    code: `<script>document.title = '해킹됨'<\/script>`,
+    // 닫는 태그를 소스에 그대로 적으면 SFC 파서가 블록의 끝으로 읽고,
+    // escape 를 쓰면 Prettier 가 되돌려 놓는다. 문자열로 조립해 둘 다 통과시킨다.
+    code: `<script>document.title = '해킹됨'${'</' + 'script>'}`,
   },
 ]
 
@@ -62,7 +64,9 @@ function sanitize(dirty) {
   // 2) 남은 태그에서 이벤트 핸들러 속성(on*)과 javascript: URL을 제거
   doc.body.querySelectorAll('*').forEach((el) => {
     const tag = el.tagName.toLowerCase()
-    // 순회 도중 속성을 지우므로 배열로 복사해 두고 돈다
+    // 순회 도중 속성을 지우므로 배열로 복사해 두고 돈다.
+    // el.attributes 는 live NamedNodeMap 이라 복사 없이 돌면 항목을 건너뛴다 (규칙 예외)
+    // oxlint-disable-next-line no-useless-spread
     for (const attr of [...el.attributes]) {
       const name = attr.name.toLowerCase()
       const value = attr.value.replace(/\s/g, '').toLowerCase()

@@ -35,6 +35,19 @@
 // --- Vue Style (p.113~114) ---
 // import VueStyleSample from './components/practices/style/VueStyleSample.vue'
 
+// --- Composition API (p.117~145) ---
+// import RefBasic from './components/practices/composition/RefBasic.vue'
+// import ReactiveBasic from './components/practices/composition/ReactiveBasic.vue'
+// import ComputedBasic from './components/practices/composition/ComputedBasic.vue'
+// import WatchBasic from './components/practices/composition/WatchBasic.vue'
+// import WatchMultiSource from './components/practices/composition/WatchMultiSource.vue'
+// import WatchDeep from './components/practices/composition/WatchDeep.vue'
+// import WatchReactive from './components/practices/composition/WatchReactive.vue'
+// import WatchEffectSample from './components/practices/composition/WatchEffectSample.vue'
+
+// --- Hands on : Weather Composition (p.145) ---
+// import WeatherComposition from './components/practices/handson/WeatherComposition.vue'
+
 // --- Hands on : Weather Mockup (p.116) ---
 import WeatherMockup from './components/practices/handson/WeatherMockup.vue'
 </script>
