@@ -354,10 +354,18 @@ const closeModal = () => (modalCity.value = null)
     <header class="app-header">
       <h2>🌤️ 지역별 날씨 현황</h2>
       <p class="subtitle">Hands on — Weather Mockup (교재 p.116)</p>
+      <p class="legend">
+        <span class="tag tag-base">기능 구현</span> 교재 요구사항 그대로
+        <span class="tag tag-plus">추가 기능</span> 직접 얹은 부분
+      </p>
     </header>
 
     <!-- ───────── 요구사항 3 : 한글 검색 (:value + @input) ─────────
          🔧 개인 응용 ⑩ 초성 검색 · ⑪ 키보드 네비게이션이 여기에 통합돼 있다 -->
+    <p class="area-label">
+      <span class="tag tag-base">기능 구현</span> 도시 검색 (요구사항 3)
+      <span class="tag tag-plus">추가 기능</span> 초성 검색 · 키보드 이동
+    </p>
     <section class="search-bar">
       <input
         type="text"
@@ -387,6 +395,7 @@ const closeModal = () => (modalCity.value = null)
     <p class="status-bar">{{ statusMessage }}</p>
 
     <!-- ───────── 🔧 개인 응용 ⑬ : 집계 대시보드 + 정렬 ───────── -->
+    <p v-if="stats" class="area-label"><span class="tag tag-plus">추가 기능</span> 집계 · 정렬</p>
     <section v-if="stats" class="dashboard">
       <div class="stat">
         <span class="stat-label">표시 중</span>
@@ -415,6 +424,10 @@ const closeModal = () => (modalCity.value = null)
     </section>
 
     <!-- ───────── 요구사항 1 : v-for + :key="id" ───────── -->
+    <p class="area-label">
+      <span class="tag tag-base">기능 구현</span> 카드 목록 · 25도 라벨 · 상세보기 (요구사항 1·2·4)
+      <span class="tag tag-plus">추가 기능</span> 온도 구간 · 시간대별 그래프 · 모달
+    </p>
     <section class="card-grid">
       <article
         v-for="(city, index) in visibleList"
@@ -441,6 +454,7 @@ const closeModal = () => (modalCity.value = null)
 
         <!-- 🔧 개인 응용 ⑫ : 조건문 대신 구간 테이블에서 find() -->
         <p class="band-chip">
+          <span class="tag tag-plus tag-mini">추가</span>
           {{ bandOf(city.temp).emoji }} {{ bandOf(city.temp).label }}
           <span v-if="bandOf(city.temp).note" class="band-note">
             {{ bandOf(city.temp).note }}
@@ -533,7 +547,7 @@ const closeModal = () => (modalCity.value = null)
 
     <!-- ───────── 구현 정리 ───────── -->
     <section class="spec">
-      <h3>📋 교재 요구사항 (p.116) 구현 현황</h3>
+      <h3><span class="tag tag-base">기능 구현</span> 교재 요구사항 (p.116)</h3>
       <ol class="spec-list">
         <li>
           <strong>배열 렌더링</strong> — <code>v-for</code> + <code>:key="city.id"</code>
@@ -558,7 +572,7 @@ const closeModal = () => (modalCity.value = null)
         </li>
       </ol>
 
-      <h3>🔧 개인 응용</h3>
+      <h3><span class="tag tag-plus">추가 기능</span> 직접 구현한 부분</h3>
       <ul class="custom-list">
         <li>
           <strong>⑩ 한글 초성 검색</strong> — 요구사항 3은 "검색어 출력"까지만 요구한다. 실제
@@ -601,7 +615,9 @@ const closeModal = () => (modalCity.value = null)
         </li>
       </ul>
 
-      <h3>🎨 CSS 변수를 <code>:style</code> 로 주입한 이유</h3>
+      <h3>
+        <span class="tag tag-plus">추가 기능</span> CSS 변수를 <code>:style</code> 로 주입한 이유
+      </h3>
       <p class="spec-note">
         p.113 개인 응용 ⑨ 에서 배운 CSS <code>v-bind()</code> 를 카드 색에 쓰려다 막혔다.
         <code>v-bind()</code> 는 <strong>컴포넌트 인스턴스 단위</strong>로 CSS 변수를 만들기 때문에,
@@ -624,9 +640,50 @@ const closeModal = () => (modalCity.value = null)
   margin-bottom: 2px;
 }
 .subtitle {
-  margin: 0 0 18px;
+  margin: 0 0 8px;
   color: #7f8c8d;
   font-size: 13px;
+}
+
+/* ───── 기능 구현 / 추가 기능 태그 ───── */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tag-base {
+  background-color: #dfe6e9;
+  color: #2d3436;
+}
+.tag-plus {
+  background-color: #42b883;
+  color: #fff;
+}
+.tag-mini {
+  padding: 1px 6px;
+  font-size: 10px;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 18px;
+  color: #7f8c8d;
+  font-size: 12px;
+}
+.area-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 22px 0 8px;
+  color: #7f8c8d;
+  font-size: 12px;
 }
 
 /* ───── 검색 ───── */

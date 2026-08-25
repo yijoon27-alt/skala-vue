@@ -3,7 +3,7 @@
 // (아래 import 주석을 풀고, template의 태그도 같이 바꿔줄 것)
 
 // --- Dev Setup (p.70~71) ---
-import SampleOne from './components/practices/basic/SampleOne.vue'
+// import SampleOne from './components/practices/basic/SampleOne.vue'
 // import SampleTwo from './components/practices/basic/SampleTwo.vue'
 
 // --- Vue Directive (p.74~92) ---
@@ -36,11 +36,11 @@ import SampleOne from './components/practices/basic/SampleOne.vue'
 // import VueStyleSample from './components/practices/style/VueStyleSample.vue'
 
 // --- Hands on : Weather Mockup (p.116) ---
-// import WeatherMockup from './components/practices/handson/WeatherMockup.vue'
+import WeatherMockup from './components/practices/handson/WeatherMockup.vue'
 </script>
 
 <template>
   <div style="padding: 20px">
-    <SampleOne />
+    <WeatherMockup />
   </div>
 </template>
