@@ -26,6 +26,14 @@ import SampleOne from './components/practices/basic/SampleOne.vue'
 // import VOnHandler from './components/practices/event/VOnHandler.vue'
 // import EventObjectSample from './components/practices/event/EventObjectSample.vue'
 // import EventModifierSample from './components/practices/event/EventModifierSample.vue'
+
+// --- Form Data Binding (p.106~112) ---
+// import VModelBasic from './components/practices/form/VModelBasic.vue'
+// import VModelFormElements from './components/practices/form/VModelFormElements.vue'
+// import VModelModifier from './components/practices/form/VModelModifier.vue'
+
+// --- Vue Style (p.113~114) ---
+// import VueStyleSample from './components/practices/style/VueStyleSample.vue'
 </script>
 
 <template>

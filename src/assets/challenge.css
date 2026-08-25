@@ -1,0 +1,31 @@
+/*
+ * challenge.css — 교재 p.114 `@import '@/assets/challenge.css'` 가 불러오는 외부 스타일 파일.
+ * 교재에는 import 구문만 있고 파일 내용이 없어서 직접 작성했다.
+ *
+ * ⚠️ 이 파일은 `<style scoped>` 가 아닌 일반 `<style>` 블록에서 import 되므로
+ *    프로젝트 전체에 적용되는 **전역 스타일**이 된다. (VueStyleSample.vue 개인 응용 ① 참고)
+ */
+
+.btn-external {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #42b883, #35495e);
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.btn-external:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgb(66 184 131 / 35%);
+}
+
+.btn-external:active {
+  transform: translateY(0);
+  box-shadow: none;
+}

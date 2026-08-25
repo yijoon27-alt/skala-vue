@@ -26,7 +26,10 @@ src/
 ├─ components/
 │  └─ practices/              # 교재 실습 컴포넌트 모음
 │     ├─ basic/               # Dev Setup (p.69~71)
-│     └─ directive/           # Vue Directive (p.74~92)
+│     ├─ directive/           # Vue Directive (p.74~92)
+│     ├─ event/               # Vue Event Handling (p.94~105)
+│     ├─ form/                # Form Data Binding (p.106~112)
+│     └─ style/               # Vue Style (p.113~114)
 ├─ assets/ · router/ · stores/ · views/
 ```
 
@@ -166,6 +169,147 @@ p.102 예제 코드에는 **앞의 2개만** 있다. 빠진 2개를 직접 구�
 
 > 📌 알게 된 점 — `.self`는 내부적으로 `e.target === e.currentTarget` 을 검사한다.
 > 모달의 **바깥 배경을 눌렀을 때만 닫기**를 구현할 때 쓰는 수식어다. 없으면 모달 내용을 클릭해도 창이 닫혀 버린다.
+
+### 4. Vue Syntax — Form Data Binding & Vue Style (p.106~114)
+
+| 교재      | 실습 내용                                                 | 파일                                    |
+| --------- | --------------------------------------------------------- | --------------------------------------- |
+| p.106     | `v-model` 양방향 바인딩 + 내부 원리(`:value` + `@input`)  | `practices/form/VModelBasic.vue`        |
+| p.107~109 | HTML Form 요소 5종과 `v-model` 매핑 규칙                  | `practices/form/VModelFormElements.vue` |
+| p.110~112 | `v-model` 수식어 — `.lazy` / `.number` / `.trim` / 체이닝 | `practices/form/VModelModifier.vue`     |
+| p.113~114 | Scoped Style / External Style (`@import`)                 | `practices/style/VueStyleSample.vue`    |
+
+> ✅ **p.115 Code Challenge** (Form Data Binding / v-model Modifiers / Vue Style) 완료
+
+이번 단원의 개인 응용은 전부 **Vue 소스 코드(`@vue/runtime-dom`, `@vue/shared`)를 직접 열어
+교재 설명과 대조하는** 방식으로 잡았다. 교재가 한 줄로 요약한 문장 뒤에 실제로는 조건 분기가
+숨어 있고, 그 분기가 한글 입력·타입 검증에서 곧바로 버그로 드러나기 때문이다.
+
+#### Customization ⑥ `VModelBasic.vue` — `v-model`은 정말 `:value` + `@input`인가
+
+교재 p.106은 `v-model`을 **"`v-bind`와 `v-on:input`을 결합한 것"** 이라고 설명하고 끝난다.
+영어를 치면 실제로 똑같지만, **한글**을 치면 두 방식의 결과가 갈라진다.
+
+`@vue/runtime-dom`의 `vModelText`를 열어 보니 교재에 없는 한 줄이 있었다.
+
+```js
+addEventListener(el, lazy ? 'change' : 'input', (e) => {
+  if (e.target.composing) return // ← 교재에 없는 IME 조합 가드
+  el[assignKey](castValue(el.value, trim, castToNumber))
+})
+if (!lazy) {
+  addEventListener(el, 'compositionstart', onCompositionStart) // composing = true
+  addEventListener(el, 'compositionend', onCompositionEnd) // composing = false
+}
+```
+
+입력창 하나에 `input` · `compositionstart` · `compositionend`를 전부 걸고,
+**같은 타이핑**에 대해 두 방식이 어떻게 달라지는지 나란히 관측하도록 만들었다.
+
+- 조합 중 여부를 배지로 실시간 표시하고, 두 값이 갈라지면 배경색으로 강조
+- `input` 이벤트 발생 횟수 vs `v-model`이 무시한 횟수를 카운트
+- 발생 이벤트를 종류별 색상 배지로 최근 12건까지 기록
+
+> 📌 알게 된 점 — "한글" 두 글자를 치면 `input` 이벤트가 **8번** 발생하는데
+> 그중 **6번**을 `v-model`이 무시한다. 한글은 자음·모음이 조합되는 동안에도 `input`이 계속
+> 발생하는데, 이때 상태를 갱신하면 Vue가 입력창을 다시 그리면서 **조합 중인 글자가 깨지기** 때문이다.
+> 반대로 **검색어 자동완성**처럼 조합 중인 글자까지 실시간으로 받아야 하는 기능은 `v-model`로
+> 만들 수 없다. 교재 p.116 Hands-on 요구사항 3번이 굳이 `:value` + `@input`으로 한글 검색을
+> 만들라고 지정한 이유가 이것이었다.
+
+#### Customization ⑦ `VModelFormElements.vue` — p.107 표가 다루지 않는 4가지
+
+교재 p.107 표는 Form 태그 5종의 **ref 초기값 타입**만 정리한다. 실무 폼에서 바로 부딪히는
+아래 네 가지는 표에도 예제에도 없어서 직접 만들어 확인했다.
+
+1. **`value` 속성을 빠뜨린 다중 체크박스** — 적용/미적용을 나란히 두고 실물 시연
+2. **`true-value` / `false-value`** — 서버가 `'Y'`/`'N'`이나 `1`/`0`을 요구하는 경우
+3. **`select multiple`(→ 배열) 과 `:value`로 객체 통째로 바인딩** — 표에 아예 없는 두 가지
+4. **서버로 전송될 페이로드 JSON 실시간 미리보기** — 타입 어긋남을 이 단계에서 잡는다
+
+> 📌 알게 된 점 — ①의 원인이 예상과 달랐다. `vModelCheckbox`는 값을 **넣을 때**와
+> 체크 표시를 **되돌릴 때** 서로 다른 곳을 본다.
+>
+> ```js
+> // ① change 핸들러 — 배열에 넣는 값
+> const elementValue = getValue(el) // el.value → "on" (브라우저 기본값)
+> // ② setChecked() — 체크 표시를 되돌릴 때 찾는 값
+> checked = looseIndexOf(value, vnode.props.value) > -1 // value 속성이 없으면 undefined
+> ```
+>
+> 배열에는 `"on"`을 넣어 놓고 `undefined`를 찾으니 항상 `-1`이라, **체크하는 순간 Vue가 표시를
+> 도로 꺼 버린다.** 더 나쁜 건 두 번째 체크박스부터다 — 배열에 `"on"`이 이미 있어서 상태가 안 바뀌고,
+> 상태가 안 바뀌니 리렌더도 안 일어나 **체크 표시만 켜진 채 남는다.** 실제로 사과→바나나→딸기
+> 순으로 눌러 보면 화면은 `[off, ON, ON]`인데 데이터는 `["on"]` 하나다.
+> 순수 HTML 폼에서는 `name`별로 전송돼 티도 안 나던 실수인데, `v-model` 배열에서는 곧바로 데이터 손실이 된다.
+
+#### Customization ⑧ `VModelModifier.vue` — "Number 타입으로 자동 형변환"의 함정
+
+교재 p.110 표는 `.number`를 **"Number 타입으로 자동 형변환"** 이라고 한 줄로 정리한다.
+그런데 Vue가 실제로 쓰는 함수는 `Number()`가 아니라 **`parseFloat()` 기반**이었다.
+
+```js
+// @vue/shared
+const looseToNumber = (val) => {
+  const n = parseFloat(val)
+  return isNaN(n) ? val : n // ← 실패하면 원본 문자열이 그대로 반환된다
+}
+```
+
+- **A) 직접 입력 관측** — `typeof`를 색상 배지로 실시간 표시
+- **B) 변환 결과 대조표** — 11가지 입력에 대해 `looseToNumber()` vs `Number()` 비교,
+  두 결과가 어긋나는 줄을 자동으로 강조
+- **C)** `<input type="number">`에는 `.number`가 필요 없다는 것을 실물로 확인
+- **D)** `.trim`은 **양끝만** 지운다 — 공백을 `␣`로 시각화해 가운데 공백이 남는 것을 확인
+- **E)** `.lazy`는 한글 조합 가드를 **끈다**
+
+> 📌 알게 된 점 — 브라우저에서 직접 찍어 본 결과가 교재 설명과 어긋났다.
+>
+> | 입력      | `.number` 결과 | 타입       | `Number()`였다면 |
+> | --------- | -------------- | ---------- | ---------------- |
+> | `"12abc"` | `12`           | number     | `NaN`            |
+> | `"abc"`   | `"abc"`        | **string** | `NaN`            |
+> | `""`      | `""`           | **string** | `0`              |
+> | `"0x10"`  | `0`            | number     | `16`             |
+>
+> `"12abc"`가 **에러 없이 `12`로 통과**하고, `"abc"`는 숫자가 아니라 **문자열 그대로** 남는다.
+> 즉 `.number`를 썼다는 이유로 타입을 믿으면 안 되고, 서버로 보내기 전에 `typeof` 검사를 따로 해야 한다.
+>
+> 그리고 `vModelText` 안의 `const castToNumber = number || vnode.props.type === 'number'` 때문에
+> **`type="number"`면 수식어 없이도 숫자 변환이 걸린다.** `type="number" v-model.number`는 중복이다.
+> `.lazy`가 조합 가드를 등록하지 않는 것(`if (!lazy) { … }`)도 같은 파일에서 확인했다.
+> `.lazy`가 쓰는 `change`는 어차피 한글 조합이 끝난 뒤에 발생하므로 가드가 필요 없기 때문이다.
+
+#### Customization ⑨ `VueStyleSample.vue` — scoped를 "설명" 말고 "증거"로
+
+교재 p.113은 scoped를 **"다른 컴포넌트에는 영향을 주지 않는다"** 고 문장으로만 설명하고,
+p.114 예제는 컴포넌트가 하나뿐이라 정작 **그 격리가 일어나는 장면이 없다.**
+또 Vue 3의 핵심 스타일 기능인 `:deep()`과 CSS `v-bind()`는 교재에 통째로 빠져 있다.
+
+1. **격리의 실물** — `StyleChildCard.vue`를 만들어 부모와 **똑같은 `.title` 클래스**를 쓰게 하고,
+   두 컴포넌트가 서로 다른 색으로 남는 것을 나란히 배치
+2. **`data-v-` 해시 관측** — 템플릿 ref로 DOM 속성을 마운트 직후 직접 읽어 화면에 표시
+3. **`:deep()`** — 체크박스로 on/off 하며 자식 내부까지 스타일이 도달하는 순간을 비교
+4. **CSS `v-bind()`** — 컬러피커·슬라이더로 카드의 색·모서리·여백을 실시간 제어
+
+> 📌 알게 된 점 — `scoped`는 런타임 격리가 아니라 **컴파일 타임 치환**이다.
+> 빌드 후 CSS를 열어 보니 `.live-card` 규칙이
+> `.live-card[data-v-95a57b12]{background-color:var(--e2130de8); …}` 로 바뀌어 있었다.
+> 해시가 컴포넌트마다 달라서 같은 클래스명이어도 서로 안 걸리는 것이고,
+> 자식 엘리먼트에는 부모의 해시가 안 붙기 때문에 `.card-body { … }`라고 써도 **아무 일도 일어나지 않는다.**
+> `:deep(.card-body)`를 써야 선택자가 `[data-v-부모] .card-body`로 바뀌어 자식 안까지 닿는다.
+> UI 라이브러리(p.231 단원) 내부 마크업을 커스터마이징할 때 반드시 쓰게 될 문법이다.
+>
+> CSS `v-bind()`는 **해시가 붙은 CSS 변수**로 컴파일된다. 개발 모드에서는
+> `--263c18ce-themeColor`처럼 이름이 남지만 `npm run build` 후에는 `--e2130de8`로 완전히 해시된다.
+> 인라인 `:style`과 달리 **`:hover`나 미디어 쿼리 안에서도 쓸 수 있다.**
+> 단, 숫자만 넘기면 CSS가 해석하지 못하므로 `computed`로 `"8px"`처럼 **단위를 붙여** 넘겨야 한다.
+
+#### 그 외 교재 코드 대비 보완
+
+- 교재 p.114가 `@import '@/assets/challenge.css'`로 불러오는 파일이 교재에 없어서 **직접 작성**했다.
+  이 블록은 `scoped`가 없어 `.btn-external`이 **프로젝트 전역**에 퍼진다는 점을 주석으로 남겼다.
+  `npm run build`로 확인해 보니 실제로 `data-v-` 없이 전역 규칙으로 번들에 들어간다.
 
 ---
 
