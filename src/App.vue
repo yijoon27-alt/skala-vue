@@ -21,6 +21,11 @@ import SampleOne from './components/practices/basic/SampleOne.vue'
 // import VCloakSample from './components/practices/directive/VCloakSample.vue'
 // import VOnceSample from './components/practices/directive/VOnceSample.vue'
 // import VMemoSample from './components/practices/directive/VMemoSample.vue'
+
+// --- Vue Event Handling (p.94~105) ---
+// import VOnHandler from './components/practices/event/VOnHandler.vue'
+// import EventObjectSample from './components/practices/event/EventObjectSample.vue'
+// import EventModifierSample from './components/practices/event/EventModifierSample.vue'
 </script>
 
 <template>
