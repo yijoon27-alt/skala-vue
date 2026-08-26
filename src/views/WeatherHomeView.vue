@@ -43,6 +43,9 @@ const filteredWeatherList = computed(() => {
 
 const isChosungQuery = computed(() => /^[ㄱ-ㅎ]+$/.test(searchQuery.value.trim()))
 const activeCityName = computed(() => filteredWeatherList.value[activeIndex.value]?.name ?? '')
+const briefingCityId = computed(
+  () => selectedCityId.value || filteredWeatherList.value[0]?.id || 'city_01',
+)
 
 const summary = computed(() => {
   const list = filteredWeatherList.value
@@ -102,7 +105,18 @@ const handleDetailJump = (city) => {
         <p class="eyebrow">WEATHER DASHBOARD</p>
         <h1>지역별 날씨</h1>
       </div>
-      <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교하기 →</RouterLink>
+      <div class="page-actions">
+        <RouterLink
+          :to="{
+            name: 'WeatherBriefing',
+            params: { cityId: briefingCityId },
+            query: { activity: 'commute' },
+          }"
+        >
+          생활 날씨 브리핑
+        </RouterLink>
+        <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교하기 →</RouterLink>
+      </div>
     </header>
 
     <BaseDashboardCard>
@@ -151,7 +165,7 @@ const handleDetailJump = (city) => {
       <h2>✅ 기본 기능</h2>
       <p>RouterView 페이지 렌더링 · 동적 상세 경로 · Programmatic Navigation</p>
       <h2>✨ 추가 기능</h2>
-      <p>초성 검색 · 키보드 탐색 · URL 검색 상태 복원 · 두 도시 비교</p>
+      <p>초성 검색 · 키보드 탐색 · URL 상태 복원 · 두 도시 비교 · 목적별 생활 날씨 브리핑</p>
     </section>
   </section>
 </template>
@@ -173,6 +187,13 @@ const handleDetailJump = (city) => {
 .page-heading a {
   color: #6c5ce7;
   font-weight: 700;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .eyebrow {

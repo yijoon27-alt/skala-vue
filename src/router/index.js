@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/WeatherCompareView.vue'),
     },
     {
+      path: '/briefing/:cityId',
+      name: 'WeatherBriefing',
+      component: () => import('../views/WeatherBriefingView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('../views/NotFoundView.vue'),

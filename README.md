@@ -34,9 +34,9 @@ src/
 │     ├─ component/           # Vue Components (p.146~178)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
-├─ data/weather.js            # 대시보드·상세·비교 View가 공유하는 Mock Data
+├─ data/weather.js            # 대시보드·상세·비교·브리핑 View가 공유하는 Mock Data
 ├─ router/index.js            # 지연 로딩·동적 경로·Catch-all Route
-├─ views/                     # WeatherHome·Detail·About·Compare·NotFound
+├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·NotFound
 └─ assets/ · stores/ · utils/
 ```
 
@@ -673,6 +673,27 @@ watch(
 > 뒤로 가기 이력이 쌓인다. 이런 상태는 `replace()`로 현재 이력만 바꾸고, 상세 페이지처럼 사용자가
 > 독립된 화면 전환을 의도한 경우에는 `push()`를 쓰는 것이 맞다.
 
+#### Customization ㉗ 목적별 생활 날씨 브리핑
+
+`WeatherBriefingView`를 추가해 같은 날씨라도 **출퇴근·야외 운동·빨래·여행** 목적에 따라
+다른 행동 가이드를 제공하도록 만들었다.
+
+| 활동      | 중요하게 보는 값            | 안내 예시                         |
+| --------- | --------------------------- | --------------------------------- |
+| 출퇴근    | 강수확률·풍속·체감온도·습도 | 우산 준비, 이동 중 더위·바람 주의 |
+| 야외 운동 | 체감온도·습도·강수확률      | 고강도 운동 조절, 수분·휴식 안내  |
+| 빨래      | 강수확률·습도·현재 날씨     | 실내 건조, 제습기·선풍기 추천     |
+| 여행      | 강수확률·풍속·체감온도      | 우천 대체 코스, 야외 일정 조정    |
+
+- `/briefing/:cityId?activity=commute`로 도시 ID와 활동 목적을 동시에 복원한다.
+- 도시 변경은 다른 지역으로의 이동이므로 `router.push()`, 활동 필터 변경은 `router.replace()`를 사용했다.
+- 임계값을 통과한 조건의 점수를 합산해 `활동하기 좋음 / 주의 필요 / 일정 조정 필요`로 분류한다.
+- 위험 이유를 점수로만 표시하지 않고, 관측값을 포함한 행동 가이드와 우산·생수·외투 등 준비물을 함께 표시한다.
+- 대시보드와 도시 상세 View에 진입 링크를 추가하고, 잘못된 도시 ID에도 별도 안내 화면을 보여 준다.
+
+> ⚠️ 현재 위험도는 실습용 Mock Data와 자체 임계값으로 산출한 생활 판단 보조 정보이며,
+> 기상청의 공식 기상특보를 대체하지 않는다. Axios 단원에서 실제 데이터로 교체할 수 있도록 규칙과 표현을 분리했다.
+
 ---
 
 ## 적용한 Vue 문법 정리
@@ -752,14 +773,14 @@ watch(
 
 ### Vue Router
 
-| 문법                                    | 쓴 곳                                                                     | 무엇에 썼나                                           |
-| --------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `createRouter()` / `createWebHistory()` | `router/index.js`                                                         | SPA 경로 규칙과 History Mode 설정                     |
-| `<RouterLink>` / `<RouterView>`         | `App.vue` `WeatherHomeView` 외                                            | 새로고침 없는 링크와 현재 View 렌더링 영역            |
-| `useRoute()`                            | `WeatherHomeView` `WeatherDetailView` `WeatherCompareView` `NotFoundView` | `params`·`query`·`fullPath` 수신                      |
-| `useRouter()`                           | Router Hands-on View 전체                                                 | `push()`·`replace()`·`back()` Programmatic Navigation |
-| Dynamic Route / Query String            | `/weather/:cityId` `/compare?left=...&right=...`                          | 도시 ID 상세 매칭, 검색·비교 상태 URL 동기화          |
-| Dynamic Import / Catch-all              | `router/index.js`                                                         | View 지연 로딩, 미매핑 주소를 404 View로 처리         |
+| 문법                                    | 쓴 곳                                                                                           | 무엇에 썼나                                           |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `createRouter()` / `createWebHistory()` | `router/index.js`                                                                               | SPA 경로 규칙과 History Mode 설정                     |
+| `<RouterLink>` / `<RouterView>`         | `App.vue` `WeatherHomeView` 외                                                                  | 새로고침 없는 링크와 현재 View 렌더링 영역            |
+| `useRoute()`                            | `WeatherHomeView` `WeatherDetailView` `WeatherCompareView` `WeatherBriefingView` `NotFoundView` | `params`·`query`·`fullPath` 수신                      |
+| `useRouter()`                           | Router Hands-on View 전체                                                                       | `push()`·`replace()`·`back()` Programmatic Navigation |
+| Dynamic Route / Query String            | `/weather/:cityId` `/compare?...` `/briefing/:cityId?activity=...`                              | 도시 ID 매칭, 검색·비교·브리핑 상태 URL 동기화        |
+| Dynamic Import / Catch-all              | `router/index.js`                                                                               | View 지연 로딩, 미매핑 주소를 404 View로 처리         |
 
 ### 스타일
 

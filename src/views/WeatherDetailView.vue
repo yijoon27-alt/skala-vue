@@ -47,6 +47,15 @@ const goDashboard = () => {
         <button type="button" @click="goDashboard">메인 대시보드</button>
         <RouterLink
           :to="{
+            name: 'WeatherBriefing',
+            params: { cityId: cityData.id },
+            query: { activity: 'commute' },
+          }"
+        >
+          생활 날씨 브리핑
+        </RouterLink>
+        <RouterLink
+          :to="{
             name: 'WeatherCompare',
             query: { left: cityData.id, right: cityData.id === 'city_01' ? 'city_02' : 'city_01' },
           }"
