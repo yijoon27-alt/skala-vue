@@ -33,6 +33,7 @@ src/
 │     ├─ composition/         # Composition API (p.117~144)
 │     ├─ component/           # Vue Components (p.146~178)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
+│        └─ weather-component/ # Hands on — Weather Component(p.178)
 ├─ assets/ · router/ · stores/ · views/
 ```
 
@@ -578,6 +579,52 @@ watch(
 
 ---
 
+### 9. Vue Components — Component Slot (p.173~177)
+
+> ✅ **p.177 Code Challenge** (Default / Named / Scoped Slot Example) 완료
+
+| 교재      | 실습 내용                                     | 파일                                             |
+| --------- | --------------------------------------------- | ------------------------------------------------ |
+| p.174·177 | Default Slot과 Fallback 콘텐츠                | `SlotDefaultParent.vue` · `SlotDefaultChild.vue` |
+| p.175·177 | `#header` Named Slot과 Default Slot 동시 사용 | `SlotNamedParent.vue` · `SlotNamedChild.vue`     |
+| p.176·177 | Slot Props를 부모의 `v-slot`으로 수신         | `SlotScopedParent.vue` · `SlotScopedChild.vue`   |
+
+이번 Code Challenge는 교재 기본 예제만 간결하게 구현하고 개인 응용은 바로 다음 Hands-on에 집중했다.
+
+---
+
+### 10. Hands on — Weather Component (p.178)
+
+날씨 화면의 상태와 기능은 유지하면서 역할별 컴포넌트로 분리했다.
+
+| 요구사항 | 구현                                                                      |
+| -------- | ------------------------------------------------------------------------- |
+| 1        | `WeatherParent`가 검색어·도시 목록·선택 상태·즐겨찾기 등 반응형 상태 소유 |
+| 2        | `BaseDashboardCard`가 검색·목록 박스의 공통 레이아웃과 Slot 제공          |
+| 3        | `SearchBar`가 검색어 Props 수신 후 `update-query` Emit                    |
+| 4        | `WeatherCard`가 도시 객체 Props 수신 후 `select-card`·`click-detail` Emit |
+| 5        | 각 컴포넌트의 디자인을 `<style scoped>`로 분리                            |
+| 6        | Slot 콘텐츠인 검색창·날씨 카드가 `WeatherParent`와 직접 통신              |
+| 7        | 다섯 번째 컴포넌트 `WeatherSummary` 추가                                  |
+
+#### Customization ㉒ Named Slot으로 레이아웃 계약 확장
+
+교재의 `BaseDashboardCard`는 Default Slot 하나만 제공한다. 이를 `header`·Default·`footer` 세 영역으로
+나눠 검색박스와 목록박스가 같은 틀을 쓰면서도 제목과 상태 표시 위치를 각자 주입하도록 확장했다.
+
+- Slot이 들어오지 않은 `header`·`footer`는 `$slots`로 감지해 빈 영역을 만들지 않는다.
+- p.177에서 따로 연습한 Named Slot을 실제 재사용 레이아웃에 바로 적용했다.
+
+#### Customization ㉓ 즐겨찾기 Props/Emits 왕복 + 요약 컴포넌트
+
+컴포넌트 분리 후에도 상태 원본은 부모 한 곳에 두는 원칙을 확인하기 위해 즐겨찾기 기능을 추가했다.
+
+- 부모가 `favoriteIds`를 관리하고 `is-favorite` Props로 각 카드에 상태를 내려보낸다.
+- 카드는 `toggle-favorite` 이벤트만 올리고 배열을 직접 수정하지 않는다.
+- 별도 `WeatherSummary`가 검색 결과 수·평균 기온·최고 기온 지역·즐겨찾기 수를 표시한다.
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -590,7 +637,7 @@ watch(
 | `v-bind` (`:`)                            | 전 컴포넌트                                                           | 속성·클래스·스타일 바인딩, `:key`, `:value`, `:style` |
 | `v-if` / `v-else-if` / `v-else`           | `VIfSample` `WeatherMockup`                                           | 로그인 분기, 학점 다중 분기, 25도 기준 라벨           |
 | `v-show`                                  | `VShowSample`                                                         | `display:none` 토글 — `v-if` 와의 차이 확인           |
-| `v-for`                                   | `VForSample` `WeatherMockup`                                          | 목록 렌더, **중첩 `v-for`**(시간대별 예보)            |
+| `v-for`                                   | `VForSample` `WeatherMockup` `WeatherParent`                          | 목록 렌더, **중첩 `v-for`**(시간대별 예보)            |
 | `v-model`                                 | `VModelBasic` `VModelFormElements` `VModelModifier` `PropsEmitsChild` | 양방향 바인딩, Form 요소 5종 매핑, 동적 Payload 입력  |
 | `v-pre` / `v-cloak` / `v-once` / `v-memo` | `VPreSample` `VCloakSample` `VOnceSample` `VMemoSample`               | 컴파일 건너뛰기, 깜빡임 방지, 1회 렌더, 조건부 렌더   |
 
@@ -643,12 +690,15 @@ watch(
 
 ### 컴포넌트 연동
 
-| 문법            | 쓴 곳                                | 무엇에 썼나                                                 |
-| --------------- | ------------------------------------ | ----------------------------------------------------------- |
-| `defineProps()` | `PropsEmitsChild`                    | 부모가 전달할 데이터의 이름·타입·필수 여부 선언             |
-| `defineEmits()` | `PropsEmitsChild`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언                |
-| Props 바인딩    | `PropsEmitsParent`                   | `:parent-data`로 부모 상태를 자식에게 전달                  |
-| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` | `@update-request`와 고정·동적 Payload로 부모 상태 변경 요청 |
+| 문법            | 쓴 곳                                                          | 무엇에 썼나                                          |
+| --------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| `defineProps()` | `PropsEmitsChild` `SearchBar` `WeatherCard` `WeatherSummary`   | 부모가 전달할 데이터의 이름·타입·필수 여부 선언      |
+| `defineEmits()` | `PropsEmitsChild` `SearchBar` `WeatherCard`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언         |
+| Props 바인딩    | `PropsEmitsParent` `WeatherParent`                             | 부모 상태를 자식에게 단방향 전달                     |
+| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` `SearchBar` `WeatherCard` | Payload로 부모 상태 변경 요청                        |
+| Default Slot    | `SlotDefaultChild` `BaseDashboardCard`                         | 부모가 자식의 본문 영역에 마크업 주입                |
+| Named Slot      | `SlotNamedChild` `BaseDashboardCard`                           | `header`·`footer` 등 이름으로 주입 위치 지정         |
+| Scoped Slot     | `SlotScopedParent` `SlotScopedChild`                           | 자식의 로컬 데이터를 Slot Props로 부모 마크업에 전달 |
 
 ### 스타일
 
