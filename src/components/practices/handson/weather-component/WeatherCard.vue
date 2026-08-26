@@ -1,4 +1,10 @@
 <script setup>
+import { useTemperature } from '@/composables/useTemperature'
+
+// 표시 온도만 단위 변환한다. 아래 배지의 임계값(25)은 원본 섭씨 기준으로 둔다 —
+// 임계값까지 변환하면 화씨로 바꾸는 순간 더움/선선함 판정이 뒤집힌다.
+const { format } = useTemperature()
+
 const props = defineProps({
   cityItem: {
     type: Object,
@@ -40,7 +46,7 @@ const selectCard = () => {
   >
     <div>
       <h3>{{ cityItem.name }} · {{ cityItem.status }}</h3>
-      <p>현재 기온 {{ cityItem.temp }}°C · 습도 {{ cityItem.humidity }}%</p>
+      <p>현재 기온 {{ format(cityItem.temp) }} · 습도 {{ cityItem.humidity }}%</p>
       <span :class="['badge', cityItem.temp >= 25 ? 'hot' : 'cool']">
         {{ cityItem.temp >= 25 ? '🔥 더움' : '❄️ 선선함' }}
       </span>

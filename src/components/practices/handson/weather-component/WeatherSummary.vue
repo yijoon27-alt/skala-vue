@@ -1,4 +1,8 @@
 <script setup>
+import { useTemperature } from '@/composables/useTemperature'
+
+const { format } = useTemperature()
+
 defineProps({
   summary: {
     type: Object,
@@ -18,7 +22,8 @@ defineProps({
       ><span>표시 지역</span>
     </div>
     <div>
-      <strong>{{ summary.average }}°C</strong><span>평균 기온</span>
+      <strong>{{ format(summary.average) }}</strong
+      ><span>평균 기온</span>
     </div>
     <div>
       <strong>{{ summary.hottest }}</strong

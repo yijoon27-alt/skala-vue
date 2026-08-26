@@ -25,6 +25,7 @@ src/
 ├─ App.vue                    # 레이아웃 뼈대 — TheHeader + RouterView 배치
 ├─ components/
 │  ├─ TheHeader.vue           # 상단 네비게이션 (앱에 하나뿐인 컴포넌트)
+│  ├─ UnitToggler.vue         # 온도 단위(℃/℉) 전환 — Navigation Bar 옆 배치
 │  └─ practices/              # 교재 실습 컴포넌트 모음
 │     ├─ basic/               # Dev Setup (p.69~71)
 │     ├─ directive/           # Vue Directive (p.74~92)
@@ -33,15 +34,23 @@ src/
 │     ├─ style/               # Vue Style (p.113~114)
 │     ├─ composition/         # Composition API (p.117~144)
 │     ├─ component/           # Vue Components (p.146~178)
+│     ├─ library/             # Pinia (p.199~211)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
 ├─ data/
 │  ├─ weather.js              # 대시보드·상세·비교·브리핑 View가 공유하는 Mock Data
 │  └─ practices.js            # 실습 컴포넌트 주제별 레지스트리 (동적 import)
 ├─ router/index.js            # 지연 로딩·동적 경로·Catch-all Route
-├─ views/                     # WeatherHome·Detail·About·Compare·Briefing
+├─ stores/
+│  ├─ counter.js              # Code Challenge 스토어 (p.211)
+│  ├─ configStore.js          # 온도 단위·대시보드 설정·변경 이력 (p.212)
+│  ├─ favoriteStore.js        # 즐겨찾기 도시 — View 사이에서 공유
+│  └─ plugins.js              # Pinia Plugin — localStorage 영속 + 액션 이력
+├─ composables/
+│  └─ useTemperature.js       # 온도 단위 변환 (p.212가 "범위 제외"로 남긴 부분)
+├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·Settings
 │                             # PracticeIndex·PracticeTopic·NotFound
-└─ assets/ · stores/ · utils/
+└─ assets/ · utils/
 ```
 
 `App.vue`는 상단 메뉴(`TheHeader`)와 페이지 렌더링 영역(`RouterView`)을 배치하는 역할만 하고,
@@ -739,6 +748,234 @@ watch(
 
 ---
 
+### 12. Pinia — Code Challenge (p.199~211)
+
+전역 상태 저장소를 교재 3단계 순서대로 구성했다.
+
+| 단계   | 내용                                          | 파일                                 |
+| ------ | --------------------------------------------- | ------------------------------------ |
+| Step 1 | `createPinia()` 생성 → `app.use()` 로 등록    | `src/main.js`                        |
+| Step 2 | `defineStore()` 로 스토어 정의                | `src/stores/counter.js`              |
+| Step 3 | `use스토어명Store()` 로 인스턴스 가동 후 사용 | `practices/library/StoreCounter.vue` |
+
+```js
+// stores/counter.js — 교재 p.203
+export const useCounterStore = defineStore('counter', () => {
+  const count = ref(0) //                     state   — 반응형 데이터
+  const doubleCount = computed(() => count.value * 2) // getters — 읽기 전용 계산
+  function increment() {
+    count.value++
+  } //                                        actions — 상태 변경 함수
+  return { count, doubleCount, increment }
+})
+```
+
+Vue DevTools의 **Pinia 탭**에서 `counter` · `config` · `favorite` 세 스토어가 잡히는 것과,
+`increment` 호출 시 `count` / `doubleCount` 가 함께 갱신되는 것을 확인했다.
+
+> 교재의 Step 1·2는 Vue 스캐폴드가 이미 동일한 형태로 만들어 둔 상태였다.
+> 그대로 두고 사용법(Step 3)만 새로 작성했다.
+
+#### Customization ㉞ `StoreReactivityPitfall.vue` — p.205 경고를 실행 가능한 증거로
+
+교재 p.205는 "구조 분해 할당을 하면 반응형 시스템(Proxy 주소)이 단절되어 화면이 갱신되지 않습니다"
+라는 **문장과 코드 조각만** 준다. 정작 _실제로 멈추는 화면_ 이 없어서, 왜 `storeToRefs` 를 써야
+하는지가 와닿지 않았다. 같은 스토어를 세 방식으로 붙여 한 화면에서 대조했다.
+
+```js
+const { count: plainCount, doubleCount: plainDouble } = counterStore // ❌ 끊김
+const { count: refCount, doubleCount: refDouble } = storeToRefs(counterStore) // ✅
+const { increment } = counterStore // ✅ 함수는 분해해도 무방
+```
+
+`숫자 1 증가` 를 3번 누른 결과 — **첫 줄만 0에 멈춰 있다.**
+
+| 접근 방식                         | state (count) | getters (doubleCount) | 반응형  |
+| --------------------------------- | ------------- | --------------------- | ------- |
+| `const { count } = counterStore`  | 0             | 0                     | ❌ 멈춤 |
+| `storeToRefs(counterStore)`       | 3             | 6                     | ✅ 갱신 |
+| `counterStore.count` (분해 안 함) | 3             | 6                     | ✅ 갱신 |
+
+- **`getters` 도 유실 대상**이다. p.205 본문은 "데이터 속성(State, Getters)" 이라고만 쓰고
+  예시는 `count` 하나뿐이라 놓치기 쉬운데, `doubleCount` 도 똑같이 0에 멈춘다.
+- 반대로 **함수인 `increment` 는 구조 분해해도 정상 동작**한다 — 위 표를 갱신시킨 버튼 자체가
+  구조 분해한 `increment` 이므로 그게 곧 증거다.
+
+> 📌 알게 된 점 — 끊기는 이유는 `count` 가 **값 복사** 되기 때문이다. 스토어는 Proxy 이고
+> `.count` 접근 시점에 `ref` 가 `unwrap` 되므로, 구조 분해하면 그 순간의 **숫자 0** 이 담긴다.
+> `storeToRefs` 는 unwrap 대신 `ref` 자체를 꺼내 주므로 연결이 유지된다.
+
+---
+
+### 13. Hands on — Weather Store (p.212)
+
+날씨 단위를 세팅하는 `configStore.js` 를 만들고 앱 전체에 적용했다.
+
+| 요구사항                              | 구현                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| 1. `UnitToggler.vue` 단위 변경 UI     | `components/UnitToggler.vue` — `℃ / ℉` 세그먼트 버튼 + `aria-pressed` |
+| 2. Navigation Bar 옆에 배치           | `TheHeader.vue` 의 `<nav>` 오른쪽 (즐겨찾기 배지와 함께)              |
+| 3. 메인·상세 날씨에 단위 적용         | `useTemperature()` 를 거쳐 **6개 파일 9군데** 동시 반영               |
+| 4. 추가 Store 작성 / configStore 확장 | `favoriteStore.js` 신규 + `configStore` 에 state·getter·action 추가   |
+
+```js
+// stores/configStore.js — 교재 지정 3종은 이름까지 그대로
+const unit = ref('celsius') //                                    state
+const unitSymbol = computed(() => UNIT_SYMBOLS[unit.value]) //     getters (℃ / ℉)
+function toggleUnit() {
+  unit.value = isFahrenheit.value ? 'celsius' : 'fahrenheit'
+} //                                                               actions
+```
+
+여기에 요구사항 4로 `favoritesOnly`(대시보드 필터) · `actionLog`(변경 이력) state,
+`isFahrenheit` · `unitLabel` getter, `setUnit` · `toggleFavoritesOnly` · `resetConfig` action 을
+더했다.
+
+#### Customization ㉚ `useTemperature()` — 교재가 "범위 제외"로 남긴 중복 제거
+
+p.212는 `(참고) 메인/상세 날씨에 단위 설정을 변경을 적용할 경우 유사한 코드가 중복됨 →
+Composable 로 해결 가능함 **(범위 제외)**` 라고 명시적으로 잘라 두었다. 이걸 실제로 구현했다.
+
+교재 샘플 코드를 그대로 옮기다 **버그를 하나 발견**했다.
+
+```js
+// 교재 p.212 샘플 — 절대 온도 변환
+return Math.round((rawTemp * 9) / 5 + 32)
+```
+
+이 식을 도시 비교 화면의 **기온 "차이"** 에 그대로 쓰면 안 된다.
+서울 28℃ / 수원 24℃ 의 차이는 4℃ 이고, 여기에 `+32` 를 붙이면 **39℉** 가 나온다.
+정답은 **7.2℉** — 차이값에는 배율(9/5)만 적용하고 오프셋(+32)은 붙지 않는다.
+
+```js
+// 절대 온도 — 교재 샘플과 동일
+const convert = (c) => (isFahrenheit.value ? Math.round((c * 9) / 5 + 32) : c)
+// 온도 "차이" — +32 를 붙이지 않는다
+const convertDelta = (c) => (isFahrenheit.value ? Math.round((c * 9 * 10) / 5) / 10 : c)
+```
+
+두 번째 원칙은 **판단 임계값은 변환하지 않는다** 는 것이다.
+
+- `WeatherCard` 의 `🔥 더움 / ❄️ 선선함` 배지 기준(`temp >= 25`)
+- `WeatherBriefingView` 의 폭염·한파 판정(`feelsLike >= 31`, `<= 5`, `>= 28`, `<= 15`)
+
+이 임계값들까지 같이 변환하면 **℉ 로 바꾸는 순간 판정이 전부 뒤집힌다.**
+원본 섭씨로 비교하고 **화면에 찍는 숫자만** `format()` 을 통과시켰다.
+실제로 ℉ 전환 후에도 서울 🔥 / 수원 ❄️ / 부산 🔥 / 제주 🔥 / 강릉 ❄️ 판정이 그대로 유지된다.
+
+브리핑 화면의 조언 문구는 규칙 배열 안에 온도를 문자열로 끼워 넣고 있어서,
+`detail: (city) => …` 시그니처를 `detail: (city, fmt) => …` 로 바꿔 **포매터를 주입**했다.
+
+> 📌 알게 된 점 — Composable 은 "중복 줄이기" 도구만이 아니다. 변환 규칙을 한곳에 모으니
+> **절대값과 차이값의 변환식이 다르다**는 사실이 드러났다. 컴포넌트마다 흩어져 있었다면
+> 9군데 중 몇 군데는 조용히 틀린 채로 남았을 것이다.
+
+#### Customization ㉛ `favoriteStore` — 라우트를 건너뛰어 살아남는 즐겨찾기
+
+교재 p.199 표는 `provide/inject` 와 `Store` 를 글로만 비교하는데, **그 표가 말하는 상황이
+지금 앱에 실제로 있었다.** 즐겨찾기가 `WeatherHomeView` 의 지역 `ref` 라서
+`/weather/city_01` 로 갔다 오면 초기화됐다 — 라우터 단원에서 View를 나눈 뒤 생긴 버그다.
+
+```js
+// 🔴 Before — WeatherHomeView 안에서만 사는 상태
+const favoriteIds = ref([])
+// 🟢 After — 스토어로 승격
+const favoriteStore = useFavoriteStore()
+```
+
+스토어로 올리자 **네 화면이 같은 배열을 본다.**
+
+| 화면          | 쓰임                                |
+| ------------- | ----------------------------------- |
+| 대시보드 카드 | `☆ / ★` 토글 (`toggle`)             |
+| 상세 페이지   | 같은 도시의 즐겨찾기 버튼           |
+| 상단 헤더     | `★ n` 배지 (`count`)                |
+| 환경설정      | 도시 목록 · 개별 해제 · 전체 비우기 |
+
+`configStore.favoritesOnly` 와 묶으면 대시보드 필터가 된다 — **두 스토어가 하나의 `computed`
+에서 합쳐지는 형태**로, 스토어를 하나만 소비하는 교재 예제에는 없는 구성이다.
+
+```js
+const filteredWeatherList = computed(() => {
+  const searched = query ? weatherCities.filter((c) => hangulMatch(c.name, query)) : weatherCities
+  if (!configStore.favoritesOnly) return searched
+  return searched.filter((city) => favoriteStore.isFavorite(city.id))
+})
+```
+
+> `weather-component/WeatherParent.vue`(p.178 실습)는 지역 상태를 **그대로 뒀다.**
+> Props/Emits 왕복이 그 실습의 주제라 스토어로 바꾸면 실습 자체가 사라진다.
+> 같은 `WeatherCard` 가 **Props 로도, Store 로도** 동작하는 대조가 오히려 남는다.
+
+#### Customization ㉜ `$subscribe` 로 저장 코드 없애기 — `stores/plugins.js`
+
+교재 p.209의 `authStore` 는 `login()` / `logout()` **액션마다 `localStorage.setItem` 을 직접**
+부른다. 액션을 하나 늘리면 저장 코드도 하나 늘고, 빠뜨리면 조용히 어긋난다.
+
+`$subscribe` 는 **상태가 바뀌는 모든 경로**를 한 번에 잡는다.
+
+```js
+// Pinia Plugin — defineStore() 3번째 인자의 옵션으로 켠다
+export function storeEnhancer({ store, options }) {
+  const { persist } = options
+  if (persist) {
+    const saved = readStorage(persist.key)
+    if (saved) store.$patch(snapshot(saved, persist.paths)) // 복원
+    store.$subscribe((_m, state) => writeStorage(persist.key, snapshot(state, persist.paths)))
+  }
+}
+```
+
+```js
+// configStore.js
+{ persist: { key: 'skala-weather-config', paths: ['unit', 'favoritesOnly'] } }
+```
+
+- **액션이 아닌 변경도 저장된다.** 아래 ㉝의 `$patch` 되돌리기는 액션이 아닌데도
+  `localStorage` 가 함께 갱신되는 것을 확인했다. 교재 방식(액션마다 수동 저장)이라면 새는 지점이다.
+- `paths` 로 저장 대상을 골라 `actionLog`(휘발성 이력)는 제외했다.
+- `$patch` 로 복원하면 여러 state 가 **한 번의 변경**으로 반영돼 `$subscribe` 도 1회만 돈다.
+
+#### Customization ㉝ `$onAction` 변경 이력 + 되돌리기 — `/settings`
+
+p.199 표는 Pinia 의 장점으로 **"타임트래블, 액션 기록"** 을 못 박아 놓고, 교재 어디에서도
+만드는 방법이 나오지 않는다. DevTools 확장이 아니라 **앱 안에서** 구현했다.
+
+```js
+store.$onAction(({ name, after }) => {
+  const before = snapshot(store, keys) // 액션 실행 전
+  after(() => {
+    const current = snapshot(store, keys) // 액션 실행 후
+    const changed = keys.filter((key) => before[key] !== current[key])
+    if (changed.length === 0) return // 값이 안 바뀐 액션은 기록하지 않는다
+    store.actionLog.unshift({ name, changed, before, after: current, at: … })
+  })
+})
+```
+
+`/settings` 화면에 이렇게 쌓인다.
+
+```
+단위 지정        08:05:31
+  온도 단위 : 섭씨 ℃ → 화씨 ℉        [이 시점으로 되돌리기]
+즐겨찾기 필터    08:05:31
+  즐겨찾기만 보기 : 켜짐 → 꺼짐       [이 시점으로 되돌리기]
+```
+
+되돌리기는 `configStore.$patch(entry.before)` 한 줄이다.
+
+- **`$patch` 는 액션이 아니라서 이력에 다시 쌓이지 않는다.** 되돌리기가 또 로그를 만들어
+  무한히 늘어나는 문제가 저절로 없어졌다. 이력 2건 상태에서 되돌린 뒤에도 2건 그대로였다.
+- `after()` 콜백을 써야 하는 이유 — `$onAction` 콜백 본문은 액션 **실행 전**에 돌아간다.
+  변경 후 값을 읽으려면 `after` 안에서 찍어야 이전/이후 대조가 성립한다.
+- 값이 안 바뀐 액션(`clearActionLog` 등)은 `changed.length === 0` 으로 걸러 로그를 깨끗하게 뒀다.
+
+> 📌 알게 된 점 — `$subscribe` 는 "무엇이 바뀌었나", `$onAction` 은 "누가 바꿨나" 를 잡는다.
+> 영속에는 전자가, 이력·감사 로그에는 후자가 맞다. 둘을 Pinia Plugin 하나에 모아 두니
+> 스토어 파일에는 옵션 한 줄(`persist` / `trackActions`)만 남았다.
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -826,6 +1063,20 @@ watch(
 | Dynamic Route / Query String            | `/weather/:cityId` `/compare?...` `/briefing/:cityId?activity=...`                              | 도시 ID 매칭, 검색·비교·브리핑 상태 URL 동기화        |
 | Dynamic Import / Catch-all              | `router/index.js`                                                                               | View 지연 로딩, 미매핑 주소를 404 View로 처리         |
 | `defineAsyncComponent()`                | `PracticeTopicView` + `data/practices.js`                                                       | 주제별 실습 컴포넌트를 열람 시점에 지연 로딩          |
+
+### Pinia · Composable
+
+| 문법                          | 쓴 곳                                            | 무엇에 썼나                                              |
+| ----------------------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| `createPinia()` / `app.use()` | `main.js`                                        | 전역 상태 저장소 등록 (+ Plugin 장착)                    |
+| `defineStore()` (Setup Store) | `counter.js` `configStore.js` `favoriteStore.js` | `ref`=state · `computed`=getters · `function`=actions    |
+| `use스토어명Store()`          | `TheHeader` `UnitToggler` `SettingsView` 외      | 인스턴스 가동 후 state·getter·action 사용                |
+| `storeToRefs()`               | `SettingsView` `StoreReactivityPitfall`          | 구조 분해 시 반응형 보존 (함수는 일반 분해)              |
+| `$subscribe()`                | `stores/plugins.js`                              | 상태 변경 전체를 잡아 `localStorage` 자동 저장           |
+| `$onAction()`                 | `stores/plugins.js`                              | 액션 호출을 가로채 이전/이후 값 이력 기록                |
+| `$patch()`                    | `stores/plugins.js` `SettingsView`               | 여러 state 일괄 변경 — 복원·되돌리기                     |
+| Pinia Plugin (`pinia.use()`)  | `stores/plugins.js`                              | `persist` · `trackActions` 옵션으로 공통 기능 주입       |
+| Composable (`use…()`)         | `composables/useTemperature.js`                  | 온도 변환 로직을 6개 파일이 공유 (절대값 vs 차이값 분리) |
 
 ### 스타일
 
@@ -1001,6 +1252,38 @@ const cityData = computed(() => findWeatherCity(String(route.params.cityId))) //
 같은 이유로 `PracticeTopicView`의 `route.params.topic`도 처음부터 `computed`로 읽었다
 — 주제 탭이 전부 같은 라우트라 여기서는 잠재 버그가 아니라 바로 드러나는 버그가 된다.
 
+### 17. 화씨로 바꾸니 두 도시의 "기온 차이"가 39℉ 로 나온다
+
+교재 p.212의 변환 샘플을 도시 비교 화면에도 그대로 붙였더니, 서울 28℃ / 수원 24℃ 의
+**차이 4℃** 가 화씨에서 `4 × 9/5 + 32 = 39.2 → 39℉` 로 표시됐다. 두 도시 기온이 39도나
+차이 날 리 없는데도 숫자만 보면 그럴듯해서 한참 못 봤다.
+
+원인은 **절대 온도와 차이값의 변환식이 다르다**는 것이다. `+32` 는 두 눈금의 **원점 차이**를
+맞추는 오프셋이라, 이미 뺄셈으로 원점이 사라진 차이값에는 붙으면 안 된다.
+
+```js
+const convert = (c) => Math.round((c * 9) / 5 + 32) //      절대 온도 → 82℉
+const convertDelta = (c) => Math.round((c * 9 * 10) / 5) / 10 // 차이 → 7.2℉
+```
+
+`useTemperature()` 에서 `format` / `formatDelta` 로 나눠 내보내고, 비교 화면만 후자를 쓴다.
+
+> 📌 알게 된 점 — 단위 변환은 "숫자에 함수 하나 씌우기" 가 아니다. 그 숫자가 **관측값인지
+> 차이값인지** 에 따라 식이 갈린다. 같은 이유로 판단 임계값(25℃, 31℃)도 변환 대상이 아니다.
+
+### 18. 되돌리기를 누를 때마다 이력이 무한히 늘어날 뻔했다
+
+`/settings` 의 "이 시점으로 되돌리기" 를 `setUnit()` 액션으로 구현하려다 멈췄다.
+되돌리기도 액션이면 `$onAction` 이 그걸 또 기록해서, 누를 때마다 이력이 한 줄씩 늘어난다.
+
+`$patch(entry.before)` 로 바꾸니 해결됐다 — **`$patch` 는 액션이 아니라 state 직접 변경**이라
+`$onAction` 이 잡지 않는다. 반면 `$subscribe` 는 잡으므로 `localStorage` 는 정상 갱신된다.
+이력 2건 상태에서 되돌린 뒤에도 2건 그대로이고 저장값만 바뀌는 것을 확인했다.
+
+> 📌 알게 된 점 — `$onAction`(누가 바꿨나)과 `$subscribe`(무엇이 바뀌었나)의 감지 범위가
+> 다르다는 점이 여기서 그대로 쓸모가 됐다. 되돌리기처럼 **기록에 남기고 싶지 않은 변경**은
+> 액션이 아닌 경로로 넣으면 된다.
+
 ## 품질 관리
 
 작업 후 아래 항목을 확인한다.
@@ -1010,5 +1293,6 @@ const cityData = computed(() => findWeatherCity(String(route.params.cityId))) //
 | ESLint 오류 0   | `npm run lint`                                                       |
 | 전체 SFC 컴파일 | `vue/compiler-sfc` 로 `src/**/*.vue` 파싱 → 스크립트 → 템플릿 컴파일 |
 | 브라우저 동작   | `npm run dev` 후 컴포넌트별 육안 확인 (콘솔 에러 0)                  |
+| 전역 상태       | Vue DevTools → Pinia 탭에서 `counter` · `config` · `favorite` 확인   |
 
 > ⚠️ API 키 등 민감 정보는 `.env` 로 분리한다. `.gitignore` 에 `.env`, `.env.*` 를 등록해 두었다.

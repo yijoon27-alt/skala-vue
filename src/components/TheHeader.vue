@@ -1,9 +1,15 @@
 <script setup>
+import UnitToggler from '@/components/UnitToggler.vue'
+import { useFavoriteStore } from '@/stores/favoriteStore'
+
+const favoriteStore = useFavoriteStore()
+
 const menuItems = [
   { routeName: 'WeatherHome', label: '날씨 대시보드' },
   { routeName: 'WeatherCompare', label: '도시 비교' },
   { routeName: 'PracticeIndex', label: '실습 모음' },
   { routeName: 'WeatherAbout', label: '서비스 소개' },
+  { routeName: 'Settings', label: '환경설정' },
 ]
 </script>
 
@@ -14,11 +20,19 @@ const menuItems = [
       <span>SKALA Weather</span>
     </RouterLink>
 
-    <nav aria-label="주요 메뉴">
-      <RouterLink v-for="item in menuItems" :key="item.routeName" :to="{ name: item.routeName }">
-        {{ item.label }}
+    <div class="header-tools">
+      <nav aria-label="주요 메뉴">
+        <RouterLink v-for="item in menuItems" :key="item.routeName" :to="{ name: item.routeName }">
+          {{ item.label }}
+        </RouterLink>
+      </nav>
+
+      <RouterLink v-if="favoriteStore.count > 0" class="favorite-badge" :to="{ name: 'Settings' }">
+        ★ {{ favoriteStore.count }}
       </RouterLink>
-    </nav>
+
+      <UnitToggler />
+    </div>
   </header>
 </template>
 
@@ -42,6 +56,13 @@ const menuItems = [
   text-decoration: none;
 }
 
+.header-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -59,6 +80,16 @@ nav a.router-link-exact-active {
   background: #6c5ce7;
   color: #fff;
   font-weight: 700;
+}
+
+.favorite-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #b7791f;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 @media (max-width: 640px) {

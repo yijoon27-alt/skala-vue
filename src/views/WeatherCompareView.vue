@@ -2,9 +2,11 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findWeatherCity, weatherCities } from '@/data/weather'
+import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
+const { format, formatDelta } = useTemperature()
 
 const validCityId = (value, fallback) =>
   typeof value === 'string' && findWeatherCity(value) ? value : fallback
@@ -14,6 +16,8 @@ const rightCityId = ref(validCityId(route.query.right, 'city_02'))
 
 const leftCity = computed(() => findWeatherCity(leftCityId.value))
 const rightCity = computed(() => findWeatherCity(rightCityId.value))
+// 기온 "차이" 는 formatDelta 로 표시한다. 교재 p.212 샘플의 절대 온도 변환식(+32)을
+// 그대로 쓰면 4℃ 차이가 화씨에서 39℉ 로 나온다 (정답은 7.2℉).
 const temperatureGap = computed(() => Math.abs(leftCity.value.temp - rightCity.value.temp))
 
 watch(
@@ -64,7 +68,7 @@ const swapCities = () => {
     <div class="comparison-grid">
       <article v-for="city in [leftCity, rightCity]" :key="city.id">
         <h2>{{ city.name }}</h2>
-        <p class="temperature">{{ city.temp }}°C</p>
+        <p class="temperature">{{ format(city.temp) }}</p>
         <dl>
           <div>
             <dt>날씨</dt>
@@ -72,7 +76,7 @@ const swapCities = () => {
           </div>
           <div>
             <dt>체감</dt>
-            <dd>{{ city.feelsLike }}°C</dd>
+            <dd>{{ format(city.feelsLike) }}</dd>
           </div>
           <div>
             <dt>습도</dt>
@@ -90,8 +94,8 @@ const swapCities = () => {
     </div>
 
     <p class="comparison-note">
-      두 도시의 현재 기온 차이는 <strong>{{ temperatureGap }}°C</strong>입니다. 선택한 도시는 URL
-      쿼리에 저장됩니다.
+      두 도시의 현재 기온 차이는 <strong>{{ formatDelta(temperatureGap) }}</strong
+      >입니다. 선택한 도시는 URL 쿼리에 저장됩니다.
     </p>
   </section>
 </template>

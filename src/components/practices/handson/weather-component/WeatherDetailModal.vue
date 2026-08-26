@@ -1,5 +1,8 @@
 <script setup>
 import { onMounted, useTemplateRef } from 'vue'
+import { useTemperature } from '@/composables/useTemperature'
+
+const { format } = useTemperature()
 
 defineProps({
   city: {
@@ -32,7 +35,7 @@ onMounted(() => {
         <h2 id="weather-detail-title">{{ city.name }} 상세 날씨</h2>
         <button type="button" aria-label="상세 날씨 닫기" @click="emit('close')">✕</button>
       </header>
-      <p class="temperature">{{ city.temp }}°C</p>
+      <p class="temperature">{{ format(city.temp) }}</p>
       <dl>
         <div>
           <dt>날씨</dt>

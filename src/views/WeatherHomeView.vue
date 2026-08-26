@@ -7,14 +7,17 @@ import WeatherCard from '@/components/practices/handson/weather-component/Weathe
 import WeatherSummary from '@/components/practices/handson/weather-component/WeatherSummary.vue'
 import { weatherCities } from '@/data/weather'
 import { hangulMatch, withParticle } from '@/utils/hangul'
+import { useConfigStore } from '@/stores/configStore'
+import { useFavoriteStore } from '@/stores/favoriteStore'
 
 const route = useRoute()
 const router = useRouter()
+const configStore = useConfigStore()
+const favoriteStore = useFavoriteStore()
 
 const searchQuery = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 도시를 검색해 보세요.')
 const selectedCityId = ref('')
-const favoriteIds = ref([])
 const activeIndex = ref(-1)
 
 const routeSearch = () => (typeof route.query.search === 'string' ? route.query.search : '')
@@ -37,8 +40,12 @@ watch(searchQuery, (newQuery) => {
 
 const filteredWeatherList = computed(() => {
   const query = searchQuery.value.trim()
-  if (!query) return weatherCities
-  return weatherCities.filter((city) => hangulMatch(city.name, query))
+  const searched = query
+    ? weatherCities.filter((city) => hangulMatch(city.name, query))
+    : weatherCities
+  // configStore(필터 설정) + favoriteStore(즐겨찾기 목록) 두 스토어가 여기서 합쳐진다
+  if (!configStore.favoritesOnly) return searched
+  return searched.filter((city) => favoriteStore.isFavorite(city.id))
 })
 
 const isChosungQuery = computed(() => /^[ㄱ-ㅎ]+$/.test(searchQuery.value.trim()))
@@ -87,12 +94,6 @@ const resetSearch = () => {
   selectedCityInfo.value = '검색을 초기화했습니다.'
 }
 
-const toggleFavorite = (cityId) => {
-  favoriteIds.value = favoriteIds.value.includes(cityId)
-    ? favoriteIds.value.filter((id) => id !== cityId)
-    : [...favoriteIds.value, cityId]
-}
-
 const handleDetailJump = (city) => {
   router.push(`/weather/${city.id}`)
 }
@@ -136,25 +137,41 @@ const handleDetailJump = (city) => {
       </template>
     </BaseDashboardCard>
 
-    <WeatherSummary :summary="summary" :favorite-count="favoriteIds.length" />
+    <WeatherSummary :summary="summary" :favorite-count="favoriteStore.count" />
 
     <BaseDashboardCard>
-      <template #header><h2>지역별 날씨 현황</h2></template>
+      <template #header>
+        <div class="list-header">
+          <h2>지역별 날씨 현황</h2>
+          <label>
+            <input
+              type="checkbox"
+              :checked="configStore.favoritesOnly"
+              @change="configStore.toggleFavoritesOnly"
+            />
+            즐겨찾기만 보기
+          </label>
+        </div>
+      </template>
       <WeatherCard
         v-for="(city, index) in filteredWeatherList"
         :key="city.id"
         :city-item="city"
-        :is-favorite="favoriteIds.includes(city.id)"
+        :is-favorite="favoriteStore.isFavorite(city.id)"
         :is-highlighted="activeIndex === index"
         :is-selected="selectedCityId === city.id"
         detail-label="상세보기"
         :show-panel-action="false"
         @select-card="selectCity"
         @click-detail="handleDetailJump"
-        @toggle-favorite="toggleFavorite"
+        @toggle-favorite="favoriteStore.toggle"
       />
       <p v-if="filteredWeatherList.length === 0" class="empty">
-        검색 결과와 일치하는 도시가 없습니다.
+        {{
+          configStore.favoritesOnly
+            ? '즐겨찾기한 도시가 없습니다. 필터를 해제하거나 ☆ 를 눌러 추가하세요.'
+            : '검색 결과와 일치하는 도시가 없습니다.'
+        }}
       </p>
       <template #footer
         ><p class="status-bar">{{ selectedCityInfo }}</p></template
@@ -165,7 +182,10 @@ const handleDetailJump = (city) => {
       <h2>✅ 기본 기능</h2>
       <p>RouterView 페이지 렌더링 · 동적 상세 경로 · Programmatic Navigation</p>
       <h2>✨ 추가 기능</h2>
-      <p>초성 검색 · 키보드 탐색 · URL 상태 복원 · 두 도시 비교 · 목적별 생활 날씨 브리핑</p>
+      <p>
+        초성 검색 · 키보드 탐색 · URL 상태 복원 · 두 도시 비교 · 목적별 생활 날씨 브리핑 · 온도 단위
+        전환 · 즐겨찾기 저장 · 설정 변경 이력
+      </p>
     </section>
   </section>
 </template>
@@ -212,6 +232,18 @@ p {
 .status-bar {
   color: #2d3436;
   font-weight: 700;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.list-header label {
+  color: #636e72;
+  font-size: 14px;
 }
 
 .empty {

@@ -2,9 +2,13 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findWeatherCity, weatherCities } from '@/data/weather'
+import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
+
+// 판단 임계값(체감 31℃ / 5℃ 등)은 원본 섭씨로 두고, 화면 문구에 찍히는 숫자만 변환한다
+const { format } = useTemperature()
 
 const activities = [
   {
@@ -51,7 +55,8 @@ const activityRules = {
       points: 1,
       test: (city) => city.feelsLike >= 31,
       title: '더위 대비가 필요합니다.',
-      detail: (city) => `체감온도 ${city.feelsLike}°C로 물을 챙기고 이동 중 그늘을 이용하세요.`,
+      detail: (city, fmt) =>
+        `체감온도 ${fmt(city.feelsLike)}로 물을 챙기고 이동 중 그늘을 이용하세요.`,
     },
     {
       points: 1,
@@ -66,8 +71,8 @@ const activityRules = {
       points: 2,
       test: (city) => city.feelsLike >= 31,
       title: '고강도 야외 운동을 줄이세요.',
-      detail: (city) =>
-        `체감온도 ${city.feelsLike}°C에서는 실내 운동이나 더 선선한 시간대가 좋습니다.`,
+      detail: (city, fmt) =>
+        `체감온도 ${fmt(city.feelsLike)}에서는 실내 운동이나 더 선선한 시간대가 좋습니다.`,
     },
     {
       points: 1,
@@ -126,8 +131,8 @@ const activityRules = {
       points: 1,
       test: (city) => city.feelsLike >= 31 || city.feelsLike <= 5,
       title: '온도에 맞는 일정을 짜세요.',
-      detail: (city) =>
-        `체감온도 ${city.feelsLike}°C이므로 장시간 야외 일정 사이에 휴식을 넣으세요.`,
+      detail: (city, fmt) =>
+        `체감온도 ${fmt(city.feelsLike)}이므로 장시간 야외 일정 사이에 휴식을 넣으세요.`,
     },
     {
       points: 1,
@@ -176,7 +181,7 @@ const evaluations = computed(() => {
   if (!cityData.value) return []
   return activityRules[activityId.value]
     .filter((rule) => rule.test(cityData.value))
-    .map((rule) => ({ ...rule, detail: rule.detail(cityData.value) }))
+    .map((rule) => ({ ...rule, detail: rule.detail(cityData.value, format) }))
 })
 
 const riskScore = computed(() => evaluations.value.reduce((sum, item) => sum + item.points, 0))
@@ -278,7 +283,8 @@ const changeCity = (event) => {
 
     <section class="weather-grid">
       <div>
-        <span>현재 / 체감</span><strong>{{ cityData.temp }}° / {{ cityData.feelsLike }}°</strong>
+        <span>현재 / 체감</span
+        ><strong>{{ format(cityData.temp) }} / {{ format(cityData.feelsLike) }}</strong>
       </div>
       <div>
         <span>강수 확률</span><strong>{{ cityData.precipitation }}%</strong>

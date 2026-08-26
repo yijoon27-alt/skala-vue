@@ -2,9 +2,14 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findWeatherCity } from '@/data/weather'
+import { useFavoriteStore } from '@/stores/favoriteStore'
+import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
+const favoriteStore = useFavoriteStore()
+const { format } = useTemperature()
+
 const cityData = computed(() => findWeatherCity(String(route.params.cityId)))
 
 const goDashboard = () => {
@@ -17,12 +22,12 @@ const goDashboard = () => {
     <template v-if="cityData">
       <p class="eyebrow">OBSERVATION {{ cityData.observedAt }}</p>
       <h1>{{ cityData.fullName }}</h1>
-      <p class="weather-status">{{ cityData.status }} · {{ cityData.temp }}°C</p>
+      <p class="weather-status">{{ cityData.status }} · {{ format(cityData.temp) }}</p>
 
       <dl class="observation-grid">
         <div>
           <dt>체감 온도</dt>
-          <dd>{{ cityData.feelsLike }}°C</dd>
+          <dd>{{ format(cityData.feelsLike) }}</dd>
         </div>
         <div>
           <dt>습도</dt>
@@ -39,6 +44,14 @@ const goDashboard = () => {
       </dl>
 
       <div class="actions">
+        <button
+          type="button"
+          :class="['favorite', { on: favoriteStore.isFavorite(cityData.id) }]"
+          :aria-pressed="favoriteStore.isFavorite(cityData.id)"
+          @click="favoriteStore.toggle(cityData.id)"
+        >
+          {{ favoriteStore.isFavorite(cityData.id) ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기' }}
+        </button>
         <button type="button" @click="router.back()">← 이전 페이지</button>
         <button type="button" @click="goDashboard">메인 대시보드</button>
         <RouterLink
@@ -123,7 +136,12 @@ dd {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.favorite.on {
+  background: #b7791f;
 }
 
 button,
