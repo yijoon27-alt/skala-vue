@@ -22,8 +22,9 @@ npm run lint    # ESLint 검사
 
 ```
 src/
-├─ App.vue                    # RouterLink 네비게이션 + RouterView 레이아웃
+├─ App.vue                    # 레이아웃 뼈대 — TheHeader + RouterView 배치
 ├─ components/
+│  ├─ TheHeader.vue           # 상단 네비게이션 (앱에 하나뿐인 컴포넌트)
 │  └─ practices/              # 교재 실습 컴포넌트 모음
 │     ├─ basic/               # Dev Setup (p.69~71)
 │     ├─ directive/           # Vue Directive (p.74~92)
@@ -43,8 +44,9 @@ src/
 └─ assets/ · stores/ · utils/
 ```
 
-`App.vue`의 상단 네비게이션으로 대시보드·도시 비교·실습 모음·서비스 소개 화면을
-새로고침 없이 전환합니다.
+`App.vue`는 상단 메뉴(`TheHeader`)와 페이지 렌더링 영역(`RouterView`)을 배치하는 역할만 하고,
+네비게이션 마크업과 스타일은 `TheHeader.vue`가 가집니다. 대시보드·도시 비교·실습 모음·
+서비스 소개 화면을 새로고침 없이 전환합니다.
 
 ---
 
@@ -657,7 +659,7 @@ watch(
 | 요구사항                                | 구현                                                                                         |
 | --------------------------------------- | -------------------------------------------------------------------------------------------- |
 | 1. Router 지연 로딩 + Catch-all         | Home 외 View를 Dynamic Import하고 `/:pathMatch(.*)*`를 마지막에 배치                         |
-| 2. `App.vue` Navigation Bar + 메인 영역 | `RouterLink` 3개와 `RouterView` 배치, 활성 메뉴 표시                                         |
+| 2. `App.vue` Navigation Bar + 메인 영역 | 상단 메뉴를 `TheHeader` 컴포넌트로 분리하고 `App.vue`에 `TheHeader` + `RouterView` 배치      |
 | 3. `WeatherHomeView`                    | `WeatherParent`의 검색·카드·요약 구조를 View로 전환하고 `router.push('/weather/' + id)` 처리 |
 | 4. `WeatherDetailView`                  | `route.params.cityId`로 Mount 시점에 Mock Data 도시를 선택하고 기온·체감·습도·풍속 표시      |
 | 5. `WeatherAboutView`                   | 서비스·Router 구조 소개와 `router.push()` 메인 복귀 버튼                                     |
@@ -714,6 +716,26 @@ watch(
 | ------------------ | ---------------------------------------------------------------------------------------------------- |
 | `/practice`        | 주제 카드 8개 (반응형 기초 · Directive · Event · Form · Style · Composition · Component · 종합 과제) |
 | `/practice/:topic` | 해당 주제 실습 컴포넌트를 순서대로 렌더                                                              |
+
+#### Customization ㉙ 상단 메뉴를 `TheHeader` 컴포넌트로 분리
+
+요구사항 2를 `App.vue` 안에 마크업을 직접 쓰는 대신, **상단 메뉴 자체를 컴포넌트로 빼고
+`App.vue`는 `TheHeader`와 `RouterView`를 배치하기만 하도록** 만들었다.
+
+```vue
+<!-- App.vue — 26줄 -->
+<TheHeader />
+<main class="route-content"><RouterView /></main>
+```
+
+- Vue 공식 스타일 가이드의 `The` 접두사 규칙을 따랐다 — 앱에 **하나만 존재하는** 컴포넌트라는 뜻이다.
+- 메뉴 항목을 `menuItems` 배열 + `v-for`로 돌려서, 메뉴를 추가할 때 `TheHeader.vue`의 배열
+  한 줄만 고치면 되게 했다.
+- 헤더 전용 CSS 50여 줄도 함께 옮겨 `App.vue`의 `<style scoped>`에는 레이아웃 뼈대만 남겼다
+  (82줄 → 26줄).
+
+> 📌 알게 된 점 — 컴포넌트 분리는 실습 화면(`weather-component/`)에만 쓰는 기법이 아니다.
+> 앱 껍데기인 `App.vue`야말로 "레이아웃 배치"라는 한 가지 역할만 남기는 것이 관심사 분리에 맞다.
 
 ---
 
@@ -791,13 +813,14 @@ watch(
 | Default Slot    | `SlotDefaultChild` `BaseDashboardCard`                                              | 부모가 자식의 본문 영역에 마크업 주입                |
 | Named Slot      | `SlotNamedChild` `BaseDashboardCard`                                                | `header`·`footer` 등 이름으로 주입 위치 지정         |
 | Scoped Slot     | `SlotScopedParent` `SlotScopedChild`                                                | 자식의 로컬 데이터를 Slot Props로 부모 마크업에 전달 |
+| 레이아웃 분리   | `App.vue` → `TheHeader`                                                             | 상단 네비게이션을 단일 인스턴스 컴포넌트로 분리      |
 
 ### Vue Router
 
 | 문법                                    | 쓴 곳                                                                                           | 무엇에 썼나                                           |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | `createRouter()` / `createWebHistory()` | `router/index.js`                                                                               | SPA 경로 규칙과 History Mode 설정                     |
-| `<RouterLink>` / `<RouterView>`         | `App.vue` `WeatherHomeView` 외                                                                  | 새로고침 없는 링크와 현재 View 렌더링 영역            |
+| `<RouterLink>` / `<RouterView>`         | `TheHeader` `App.vue` `WeatherHomeView` 외                                                      | 새로고침 없는 링크와 현재 View 렌더링 영역            |
 | `useRoute()`                            | `WeatherHomeView` `WeatherDetailView` `WeatherCompareView` `WeatherBriefingView` `NotFoundView` | `params`·`query`·`fullPath` 수신                      |
 | `useRouter()`                           | Router Hands-on View 전체                                                                       | `push()`·`replace()`·`back()` Programmatic Navigation |
 | Dynamic Route / Query String            | `/weather/:cityId` `/compare?...` `/briefing/:cityId?activity=...`                              | 도시 ID 매칭, 검색·비교·브리핑 상태 URL 동기화        |
