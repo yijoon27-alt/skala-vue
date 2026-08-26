@@ -8,17 +8,28 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isHighlighted: {
+    type: Boolean,
+    default: false,
+  },
+  isSelected: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['select-card', 'click-detail', 'toggle-favorite'])
+const emit = defineEmits(['select-card', 'click-detail', 'open-modal', 'toggle-favorite'])
 
 const selectCard = () => {
-  emit('select-card', `${props.cityItem.name}이(가) 선택되었습니다.`)
+  emit('select-card', props.cityItem)
 }
 </script>
 
 <template>
-  <article class="weather-card" @click="selectCard">
+  <article
+    :class="['weather-card', { highlighted: isHighlighted, selected: isSelected }]"
+    @click="selectCard"
+  >
     <div>
       <h3>{{ cityItem.name }} · {{ cityItem.status }}</h3>
       <p>현재 기온 {{ cityItem.temp }}°C · 습도 {{ cityItem.humidity }}%</p>
@@ -35,8 +46,9 @@ const selectCard = () => {
         {{ isFavorite ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기' }}
       </button>
       <button type="button" @click.stop="emit('click-detail', cityItem.name, cityItem.status)">
-        상세보기
+        빠른 알림
       </button>
+      <button type="button" @click.stop="emit('open-modal', cityItem)">상세 패널</button>
     </div>
   </article>
 </template>
@@ -52,6 +64,16 @@ const selectCard = () => {
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
+}
+
+.weather-card.highlighted {
+  outline: 3px solid #f1c40f;
+  outline-offset: 2px;
+}
+
+.weather-card.selected {
+  border-color: #6c5ce7;
+  background: #f7f5ff;
 }
 
 h3,

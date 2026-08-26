@@ -3,6 +3,7 @@ import { computed, ref, watch, watchEffect } from 'vue'
 import BaseDashboardCard from './BaseDashboardCard.vue'
 import SearchBar from './SearchBar.vue'
 import WeatherCard from './WeatherCard.vue'
+import WeatherDetailModal from './WeatherDetailModal.vue'
 import WeatherSummary from './WeatherSummary.vue'
 
 const weatherList = ref([
@@ -15,13 +16,77 @@ const weatherList = ref([
 
 const searchQuery = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 도시를 검색해 보세요.')
+const selectedCityId = ref('')
 const favoriteIds = ref([])
+const activeIndex = ref(-1)
+const detailCity = ref(null)
+
+const CHOSUNG = [
+  'ㄱ',
+  'ㄲ',
+  'ㄴ',
+  'ㄷ',
+  'ㄸ',
+  'ㄹ',
+  'ㅁ',
+  'ㅂ',
+  'ㅃ',
+  'ㅅ',
+  'ㅆ',
+  'ㅇ',
+  'ㅈ',
+  'ㅉ',
+  'ㅊ',
+  'ㅋ',
+  'ㅌ',
+  'ㅍ',
+  'ㅎ',
+]
+const HANGUL_FIRST = 0xac00
+const HANGUL_LAST = 0xd7a3
+const CHO_STRIDE = 588
+
+const isCompleteHangul = (code) => code >= HANGUL_FIRST && code <= HANGUL_LAST
+const isJamo = (character) => /[ㄱ-ㅎ]/.test(character)
+
+const chosungOf = (character) => {
+  const code = character.charCodeAt(0)
+  if (!isCompleteHangul(code)) return null
+  return CHOSUNG[Math.floor((code - HANGUL_FIRST) / CHO_STRIDE)]
+}
+
+const hangulMatch = (name, query) => {
+  if (!query || name.includes(query)) return true
+
+  for (let start = 0; start + query.length <= name.length; start++) {
+    let matched = true
+    for (let index = 0; index < query.length; index++) {
+      const queryCharacter = query[index]
+      const nameCharacter = name[start + index]
+      if (queryCharacter === nameCharacter) continue
+      if (isJamo(queryCharacter) && chosungOf(nameCharacter) === queryCharacter) continue
+      matched = false
+      break
+    }
+    if (matched) return true
+  }
+  return false
+}
+
+const withParticle = (word, withBatchim, withoutBatchim) => {
+  const code = word.at(-1)?.charCodeAt(0) ?? 0
+  if (!isCompleteHangul(code)) return `${word}${withBatchim}`
+  return `${word}${(code - HANGUL_FIRST) % 28 === 0 ? withoutBatchim : withBatchim}`
+}
 
 const filteredWeatherList = computed(() => {
   const query = searchQuery.value.trim()
   if (!query) return weatherList.value
-  return weatherList.value.filter((city) => city.name.includes(query))
+  return weatherList.value.filter((city) => hangulMatch(city.name, query))
 })
+
+const isChosungQuery = computed(() => /^[ㄱ-ㅎ]+$/.test(searchQuery.value.trim()))
+const activeCityName = computed(() => filteredWeatherList.value[activeIndex.value]?.name ?? '')
 
 const summary = computed(() => {
   const list = filteredWeatherList.value
@@ -43,6 +108,34 @@ watchEffect(() => {
   console.log(`[검색 추적] "${searchQuery.value}"`)
 })
 
+const updateSearchQuery = (value) => {
+  searchQuery.value = value
+  activeIndex.value = -1
+}
+
+const moveHighlight = (delta) => {
+  const count = filteredWeatherList.value.length
+  if (!count) return
+  activeIndex.value = (activeIndex.value + delta + count) % count
+}
+
+const selectCity = (city) => {
+  selectedCityId.value = city.id
+  selectedCityInfo.value = `${withParticle(city.name, '이', '가')} 선택되었습니다.`
+  activeIndex.value = filteredWeatherList.value.findIndex((item) => item.id === city.id)
+}
+
+const selectHighlight = () => {
+  const city = filteredWeatherList.value[activeIndex.value] ?? filteredWeatherList.value[0]
+  if (city) selectCity(city)
+}
+
+const resetSearch = () => {
+  searchQuery.value = ''
+  activeIndex.value = -1
+  selectedCityInfo.value = '검색을 초기화했습니다.'
+}
+
 const toggleFavorite = (cityId) => {
   favoriteIds.value = favoriteIds.value.includes(cityId)
     ? favoriteIds.value.filter((id) => id !== cityId)
@@ -51,6 +144,10 @@ const toggleFavorite = (cityId) => {
 
 const showDetail = (cityName, status) => {
   window.alert(`${cityName}의 현재 날씨는 [${status}] 상태입니다.`)
+}
+
+const openModal = (city) => {
+  detailCity.value = city
 }
 </script>
 
@@ -65,7 +162,12 @@ const showDetail = (cityName, status) => {
       <SearchBar
         :current-query="searchQuery"
         :result-count="filteredWeatherList.length"
-        @update-query="(value) => (searchQuery = value)"
+        :is-chosung-query="isChosungQuery"
+        :active-city-name="activeCityName"
+        @update-query="updateSearchQuery"
+        @move-highlight="moveHighlight"
+        @select-highlight="selectHighlight"
+        @reset-query="resetSearch"
       />
       <template #footer>
         <small>검색 조건과 날씨 데이터는 부모 컴포넌트가 관리합니다.</small>
@@ -79,12 +181,15 @@ const showDetail = (cityName, status) => {
         <h2>지역별 날씨 현황</h2>
       </template>
       <WeatherCard
-        v-for="city in filteredWeatherList"
+        v-for="(city, index) in filteredWeatherList"
         :key="city.id"
         :city-item="city"
         :is-favorite="favoriteIds.includes(city.id)"
-        @select-card="(message) => (selectedCityInfo = message)"
+        :is-highlighted="activeIndex === index"
+        :is-selected="selectedCityId === city.id"
+        @select-card="selectCity"
         @click-detail="showDetail"
+        @open-modal="openModal"
         @toggle-favorite="toggleFavorite"
       />
       <p v-if="filteredWeatherList.length === 0" class="empty">
@@ -99,8 +204,10 @@ const showDetail = (cityName, status) => {
       <h2>✅ 기본 기능</h2>
       <p>컴포넌트 분리 · Props 하향 전달 · Emits 상향 전달 · Slot 레이아웃 주입</p>
       <h2>✨ 추가 기능</h2>
-      <p>Named Slot 영역 · 날씨 요약 컴포넌트 · 즐겨찾기 Props/Emit 왕복</p>
+      <p>초성 검색 · 키보드 탐색 · 상세 모달 · Named Slot · 요약 컴포넌트 · 즐겨찾기</p>
     </section>
+
+    <WeatherDetailModal v-if="detailCity" :city="detailCity" @close="detailCity = null" />
   </main>
 </template>
 

@@ -605,7 +605,7 @@ watch(
 | 4        | `WeatherCard`가 도시 객체 Props 수신 후 `select-card`·`click-detail` Emit |
 | 5        | 각 컴포넌트의 디자인을 `<style scoped>`로 분리                            |
 | 6        | Slot 콘텐츠인 검색창·날씨 카드가 `WeatherParent`와 직접 통신              |
-| 7        | 다섯 번째 컴포넌트 `WeatherSummary` 추가                                  |
+| 7        | `WeatherSummary`와 `WeatherDetailModal` 추가 컴포넌트 구현                |
 
 #### Customization ㉒ Named Slot으로 레이아웃 계약 확장
 
@@ -622,6 +622,24 @@ watch(
 - 부모가 `favoriteIds`를 관리하고 `is-favorite` Props로 각 카드에 상태를 내려보낸다.
 - 카드는 `toggle-favorite` 이벤트만 올리고 배열을 직접 수정하지 않는다.
 - 별도 `WeatherSummary`가 검색 결과 수·평균 기온·최고 기온 지역·즐겨찾기 수를 표시한다.
+
+#### Customization ㉔ 초성 검색·키보드 탐색을 컴포넌트 구조로 이식
+
+기존 `WeatherMockup`에서 검증한 한글 초성 검색과 방향키 탐색을 단순 복사하지 않고 역할별로 나눴다.
+
+- `SearchBar`는 `:value`·`@input`으로 IME 조합 중인 낱자음까지 부모에게 전달한다.
+- `WeatherParent`는 완성형 한글의 초성 코드 분해와 검색 결과·활성 인덱스를 관리한다.
+- `SearchBar`가 방향키·Enter·Esc 이벤트를 Emit하면 부모가 상태를 바꾸고, `WeatherCard`는
+  `is-highlighted`·`is-selected` Props로 결과만 표현한다.
+
+#### Customization ㉕ 상세 모달을 독립 컴포넌트로 분리
+
+교재의 `alert` 동작은 **빠른 알림** 버튼으로 유지하면서 상세 화면은 `WeatherDetailModal`로 분리했다.
+
+- 카드가 `open-modal` 이벤트로 도시 객체를 올리고 부모가 현재 상세 도시를 소유한다.
+- 모달은 `city` Props를 받아 렌더링하고 `close` 이벤트만 부모에게 전달한다.
+- 마운트 시 `useTemplateRef()`로 포커스를 옮겨 Esc 닫기를 보장하고, `@click.self`로 배경을
+  클릭했을 때만 닫히게 했다.
 
 ---
 
@@ -643,23 +661,23 @@ watch(
 
 ### 이벤트
 
-| 문법                                      | 쓴 곳                                            | 무엇에 썼나                                                  |
-| ----------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| `@click`                                  | 전 컴포넌트                                      | 버튼·카드 클릭                                               |
-| `@input` / `@change`                      | `VOnHandler` `VModelBasic` `WeatherMockup`       | 실시간 입력 vs 확정 시점의 차이                              |
-| `@keydown` / `@keyup`                     | `VOnHandler` `EventObjectSample` `WeatherMockup` | 키 입력 감지, `key` vs `code` 비교                           |
-| `@submit` / `@mouseenter` / `@mouseleave` | `VOnHandler`                                     | 이벤트 8종 발생 시점 비교                                    |
-| `@compositionstart` / `@compositionend`   | `VModelBasic`                                    | **한글 조합(IME) 시작·종료 감지**                            |
-| 이벤트 객체                               | `EventObjectSample`                              | `clientX/pageX/screenX`, `target` vs `currentTarget`, 조합키 |
+| 문법                                      | 쓴 곳                                                        | 무엇에 썼나                                                  |
+| ----------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `@click`                                  | 전 컴포넌트                                                  | 버튼·카드 클릭                                               |
+| `@input` / `@change`                      | `VOnHandler` `VModelBasic` `WeatherMockup`                   | 실시간 입력 vs 확정 시점의 차이                              |
+| `@keydown` / `@keyup`                     | `VOnHandler` `EventObjectSample` `WeatherMockup` `SearchBar` | 키 입력 감지, `key` vs `code` 비교, 검색 결과 탐색           |
+| `@submit` / `@mouseenter` / `@mouseleave` | `VOnHandler`                                                 | 이벤트 8종 발생 시점 비교                                    |
+| `@compositionstart` / `@compositionend`   | `VModelBasic`                                                | **한글 조합(IME) 시작·종료 감지**                            |
+| 이벤트 객체                               | `EventObjectSample`                                          | `clientX/pageX/screenX`, `target` vs `currentTarget`, 조합키 |
 
 ### 이벤트 수식어
 
-| 수식어                        | 쓴 곳                                                   | 무엇에 썼나                                 |
-| ----------------------------- | ------------------------------------------------------- | ------------------------------------------- |
-| `.prevent`                    | `EventModifierSample` `WeatherMockup` `PropsEmitsChild` | 링크 이동·방향키 기본 동작·폼 새로고침 차단 |
-| `.stop`                       | `EventModifierSample` `WeatherMockup`                   | 카드 클릭과 버튼 클릭이 겹치지 않게         |
-| `.once` / `.self`             | `EventModifierSample` `WeatherMockup`                   | 1회만 실행, 모달 배경 클릭으로만 닫기       |
-| `.up` `.down` `.enter` `.esc` | `WeatherMockup`                                         | 검색 결과 키보드 이동·선택·초기화           |
+| 수식어                        | 쓴 곳                                                                    | 무엇에 썼나                                 |
+| ----------------------------- | ------------------------------------------------------------------------ | ------------------------------------------- |
+| `.prevent`                    | `EventModifierSample` `WeatherMockup` `PropsEmitsChild`                  | 링크 이동·방향키 기본 동작·폼 새로고침 차단 |
+| `.stop`                       | `EventModifierSample` `WeatherMockup` `WeatherCard` `WeatherDetailModal` | 카드·버튼 이벤트 분리, Esc 전파 차단        |
+| `.once` / `.self`             | `EventModifierSample` `WeatherMockup`                                    | 1회만 실행, 모달 배경 클릭으로만 닫기       |
+| `.up` `.down` `.enter` `.esc` | `WeatherMockup` `SearchBar` `WeatherDetailModal`                         | 검색 결과 이동·선택·초기화, 모달 닫기       |
 
 ### v-model 수식어
 
@@ -671,34 +689,34 @@ watch(
 
 ### 데이터 · 반응형
 
-| 문법                         | 쓴 곳                                    | 무엇에 썼나                                                     |
-| ---------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
-| `ref()`                      | 전 컴포넌트                              | 반응형 상태 — 일반 변수와의 차이는 `SampleOne` 에서 확인        |
-| `computed()`                 | `VForSample` `WeatherMockup` 외          | 검색 필터, 정렬, 평균·최고·최저 집계, 파생 상태                 |
-| `onMounted()` / `nextTick()` | `VueStyleSample` `WeatherMockup`         | `data-v-` 속성 읽기, 모달 포커스 이동                           |
-| `useTemplateRef()`           | `VueStyleSample` `WeatherMockup`         | DOM 엘리먼트 직접 참조                                          |
-| 배열 메서드                  | `VForSample` `WeatherMockup`             | `filter` `toSorted` `reduce` `find` `localeCompare`             |
-| 객체 배열                    | `WeatherMockup`                          | 도시 8곳 · 기온/습도/미세먼지/체감온도/시간대별 예보(중첩 배열) |
-| `reactive()`                 | `ReactiveBasic` `WatchReactive`          | 객체·배열 반응형, 재할당 시 반응성이 끊기는 특성 확인           |
-| `computed({ get, set })`     | `WeatherComposition`                     | 섭씨 ↔ 화씨 단위 전환을 `v-model` 하나로 양방향 처리            |
-| `watch()`                    | `WatchBasic` `WeatherComposition`        | 선택 도시 변경 감지, 이전/현재 값 콜백                          |
-| `watch([a, b])`              | `WatchMultiSource` `WeatherComposition`  | 정렬·필터 묶음 감시로 중복 조회 차단                            |
-| `watch(…, { deep: true })`   | `WatchDeep` `WeatherComposition`         | 객체 하위 속성 감시 + 스냅샷 대조로 변경 이력 기록              |
-| `watchEffect()`              | `WatchEffectSample` `WeatherComposition` | 검색어 자동 추적, `onCleanup` 으로 이전 요청 취소               |
-| `toRaw()`                    | `WeatherComposition`                     | 반응형 프록시를 벗겨 `structuredClone` 으로 스냅샷 뜨기         |
-| Lifecycle Hooks              | `LifecycleChild`                         | 마운트 시 타이머 시작, 업데이트 확인, 언마운트 시 타이머 정리   |
+| 문법                         | 쓴 곳                                                 | 무엇에 썼나                                                     |
+| ---------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| `ref()`                      | 전 컴포넌트                                           | 반응형 상태 — 일반 변수와의 차이는 `SampleOne` 에서 확인        |
+| `computed()`                 | `VForSample` `WeatherMockup` 외                       | 검색 필터, 정렬, 평균·최고·최저 집계, 파생 상태                 |
+| `onMounted()` / `nextTick()` | `VueStyleSample` `WeatherMockup` `WeatherDetailModal` | `data-v-` 속성 읽기, 모달 포커스 이동                           |
+| `useTemplateRef()`           | `VueStyleSample` `WeatherMockup` `WeatherDetailModal` | DOM 엘리먼트 직접 참조                                          |
+| 배열 메서드                  | `VForSample` `WeatherMockup`                          | `filter` `toSorted` `reduce` `find` `localeCompare`             |
+| 객체 배열                    | `WeatherMockup`                                       | 도시 8곳 · 기온/습도/미세먼지/체감온도/시간대별 예보(중첩 배열) |
+| `reactive()`                 | `ReactiveBasic` `WatchReactive`                       | 객체·배열 반응형, 재할당 시 반응성이 끊기는 특성 확인           |
+| `computed({ get, set })`     | `WeatherComposition`                                  | 섭씨 ↔ 화씨 단위 전환을 `v-model` 하나로 양방향 처리            |
+| `watch()`                    | `WatchBasic` `WeatherComposition`                     | 선택 도시 변경 감지, 이전/현재 값 콜백                          |
+| `watch([a, b])`              | `WatchMultiSource` `WeatherComposition`               | 정렬·필터 묶음 감시로 중복 조회 차단                            |
+| `watch(…, { deep: true })`   | `WatchDeep` `WeatherComposition`                      | 객체 하위 속성 감시 + 스냅샷 대조로 변경 이력 기록              |
+| `watchEffect()`              | `WatchEffectSample` `WeatherComposition`              | 검색어 자동 추적, `onCleanup` 으로 이전 요청 취소               |
+| `toRaw()`                    | `WeatherComposition`                                  | 반응형 프록시를 벗겨 `structuredClone` 으로 스냅샷 뜨기         |
+| Lifecycle Hooks              | `LifecycleChild`                                      | 마운트 시 타이머 시작, 업데이트 확인, 언마운트 시 타이머 정리   |
 
 ### 컴포넌트 연동
 
-| 문법            | 쓴 곳                                                          | 무엇에 썼나                                          |
-| --------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
-| `defineProps()` | `PropsEmitsChild` `SearchBar` `WeatherCard` `WeatherSummary`   | 부모가 전달할 데이터의 이름·타입·필수 여부 선언      |
-| `defineEmits()` | `PropsEmitsChild` `SearchBar` `WeatherCard`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언         |
-| Props 바인딩    | `PropsEmitsParent` `WeatherParent`                             | 부모 상태를 자식에게 단방향 전달                     |
-| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` `SearchBar` `WeatherCard` | Payload로 부모 상태 변경 요청                        |
-| Default Slot    | `SlotDefaultChild` `BaseDashboardCard`                         | 부모가 자식의 본문 영역에 마크업 주입                |
-| Named Slot      | `SlotNamedChild` `BaseDashboardCard`                           | `header`·`footer` 등 이름으로 주입 위치 지정         |
-| Scoped Slot     | `SlotScopedParent` `SlotScopedChild`                           | 자식의 로컬 데이터를 Slot Props로 부모 마크업에 전달 |
+| 문법            | 쓴 곳                                                                               | 무엇에 썼나                                          |
+| --------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `defineProps()` | `PropsEmitsChild` `SearchBar` `WeatherCard` `WeatherSummary` `WeatherDetailModal`   | 부모가 전달할 데이터의 이름·타입·필수 여부 선언      |
+| `defineEmits()` | `PropsEmitsChild` `SearchBar` `WeatherCard` `WeatherDetailModal`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언         |
+| Props 바인딩    | `PropsEmitsParent` `WeatherParent`                                                  | 부모 상태를 자식에게 단방향 전달                     |
+| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` `SearchBar` `WeatherCard` `WeatherDetailModal` | Payload로 부모 상태 변경 요청                        |
+| Default Slot    | `SlotDefaultChild` `BaseDashboardCard`                                              | 부모가 자식의 본문 영역에 마크업 주입                |
+| Named Slot      | `SlotNamedChild` `BaseDashboardCard`                                                | `header`·`footer` 등 이름으로 주입 위치 지정         |
+| Scoped Slot     | `SlotScopedParent` `SlotScopedChild`                                                | 자식의 로컬 데이터를 Slot Props로 부모 마크업에 전달 |
 
 ### 스타일
 
