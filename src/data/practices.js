@@ -229,6 +229,23 @@ export const practiceGroups = [
     ],
   },
   {
+    id: 'library',
+    title: 'Pinia',
+    summary: '전역 상태 저장소 — state · getters · actions',
+    items: [
+      {
+        name: 'StoreCounter',
+        label: 'Counter Store — state · getters · actions',
+        component: () => import('@/components/practices/library/StoreCounter.vue'),
+      },
+      {
+        name: 'StoreReactivityPitfall',
+        label: '구조 분해 할당과 storeToRefs',
+        component: () => import('@/components/practices/library/StoreReactivityPitfall.vue'),
+      },
+    ],
+  },
+  {
     id: 'handson',
     title: '종합 과제',
     summary: '날씨 대시보드를 문법 → Composition API → 컴포넌트 구조로 발전시킨 기록',
