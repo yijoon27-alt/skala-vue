@@ -9,6 +9,7 @@
       <nav aria-label="주요 메뉴">
         <RouterLink :to="{ name: 'WeatherHome' }">날씨 대시보드</RouterLink>
         <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교</RouterLink>
+        <RouterLink :to="{ name: 'PracticeIndex' }">실습 모음</RouterLink>
         <RouterLink :to="{ name: 'WeatherAbout' }">서비스 소개</RouterLink>
       </nav>
     </header>

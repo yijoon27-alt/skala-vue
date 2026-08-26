@@ -1,15 +1,11 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findWeatherCity } from '@/data/weather'
 
 const route = useRoute()
 const router = useRouter()
-const cityData = ref(null)
-
-onMounted(() => {
-  cityData.value = findWeatherCity(String(route.params.cityId))
-})
+const cityData = computed(() => findWeatherCity(String(route.params.cityId)))
 
 const goDashboard = () => {
   router.push({ name: 'WeatherHome' })

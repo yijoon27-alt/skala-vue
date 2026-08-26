@@ -13,7 +13,7 @@ SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저�
 
 ```sh
 npm install     # 의존성 설치
-npm run dev     # 개발 서버 실행
+npm run dev     # 개발 서버 실행 (localhost:3000)
 npm run build   # 프로덕션 빌드
 npm run lint    # ESLint 검사
 ```
@@ -34,13 +34,17 @@ src/
 │     ├─ component/           # Vue Components (p.146~178)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
-├─ data/weather.js            # 대시보드·상세·비교·브리핑 View가 공유하는 Mock Data
+├─ data/
+│  ├─ weather.js              # 대시보드·상세·비교·브리핑 View가 공유하는 Mock Data
+│  └─ practices.js            # 실습 컴포넌트 주제별 레지스트리 (동적 import)
 ├─ router/index.js            # 지연 로딩·동적 경로·Catch-all Route
-├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·NotFound
+├─ views/                     # WeatherHome·Detail·About·Compare·Briefing
+│                             # PracticeIndex·PracticeTopic·NotFound
 └─ assets/ · stores/ · utils/
 ```
 
-`App.vue`의 상단 네비게이션으로 대시보드·도시 비교·서비스 소개 화면을 새로고침 없이 전환합니다.
+`App.vue`의 상단 네비게이션으로 대시보드·도시 비교·실습 모음·서비스 소개 화면을
+새로고침 없이 전환합니다.
 
 ---
 
@@ -694,6 +698,23 @@ watch(
 > ⚠️ 현재 위험도는 실습용 Mock Data와 자체 임계값으로 산출한 생활 판단 보조 정보이며,
 > 기상청의 공식 기상특보를 대체하지 않는다. Axios 단원에서 실제 데이터로 교체할 수 있도록 규칙과 표현을 분리했다.
 
+#### Customization ㉘ 실습 아카이브 라우트
+
+라우터로 전환하면서 이전 단원 실습 컴포넌트 39개가 **화면에서 사라지는 문제**가 생겼다
+(아래 트러블슈팅 15번). `/practice/:topic` 동적 라우트를 추가해 되살렸다.
+
+- `src/data/practices.js`에 주제별 레지스트리를 두고, 각 항목은 `() => import(...)` 형태로 보관한다.
+- `PracticeTopicView`는 `defineAsyncComponent()`로 해당 주제의 실습만 지연 로딩한다.
+  → 초기 번들에는 실습 컴포넌트가 하나도 들어가지 않고, 주제를 열 때 청크가 따로 내려온다.
+- 주제 탭도 같은 라우트(`/practice/:topic`)라 컴포넌트가 재사용된다. `route.params.topic`을
+  `computed`로 읽어 파라미터만 바뀌어도 목록이 다시 그려지도록 했다.
+- 없는 주제(`/practice/none`)는 404로 보내지 않고 실습 목록으로 유도하는 안내 화면을 띄운다.
+
+| 라우트             | 화면                                                                                                 |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `/practice`        | 주제 카드 8개 (반응형 기초 · Directive · Event · Form · Style · Composition · Component · 종합 과제) |
+| `/practice/:topic` | 해당 주제 실습 컴포넌트를 순서대로 렌더                                                              |
+
 ---
 
 ## 적용한 Vue 문법 정리
@@ -781,6 +802,7 @@ watch(
 | `useRouter()`                           | Router Hands-on View 전체                                                                       | `push()`·`replace()`·`back()` Programmatic Navigation |
 | Dynamic Route / Query String            | `/weather/:cityId` `/compare?...` `/briefing/:cityId?activity=...`                              | 도시 ID 매칭, 검색·비교·브리핑 상태 URL 동기화        |
 | Dynamic Import / Catch-all              | `router/index.js`                                                                               | View 지연 로딩, 미매핑 주소를 404 View로 처리         |
+| `defineAsyncComponent()`                | `PracticeTopicView` + `data/practices.js`                                                       | 주제별 실습 컴포넌트를 열람 시점에 지연 로딩          |
 
 ### 스타일
 
@@ -923,6 +945,38 @@ structuredClone(toRaw(favorites.value)) // 🟢
 템플릿에서 함수로 호출해 매 렌더마다 새로 읽게 했다.
 같은 이유로 `watchEffect` 안에서 `reactive` 값을 `++` 하는 것도 위험하다 —
 `++` 는 "읽고 나서 쓰는" 연산이라 그 값이 감시 목록에 등록되기 때문이다.
+
+### 15. 라우터로 전환하니 이전 단원 실습이 전부 사라졌다
+
+Router 실습에서 `App.vue`를 `RouterView` 레이아웃으로 바꿨더니 **1~3일차 실습 컴포넌트
+39개가 어디서도 import 되지 않는 상태**가 됐다. 그전까지는 `App.vue`의 import 주석을
+갈아 끼우며 하나씩 확인하는 방식이었는데, 그 진입점이 통째로 없어졌기 때문이다.
+파일과 기록은 남아 있어도 실행 화면에서는 볼 수 없고, `vite build`도 52 모듈만 잡았다.
+
+`src/data/practices.js` 레지스트리 + `/practice/:topic` 라우트로 되살렸다.
+빌드 모듈 수가 52 → 137로 늘어난 것으로 실제로 다시 포함됐음을 확인했다.
+
+> 📌 알게 된 점 — 라우팅 도입은 "화면 전환 방식만 바꾸는 일"이 아니라 **컴포넌트 도달 경로를
+> 새로 정의하는 일**이다. 라우트가 없는 컴포넌트는 코드가 멀쩡해도 존재하지 않는 것과 같다.
+
+### 16. 상세 페이지가 도시를 바꿔도 갱신되지 않는다
+
+`WeatherDetailView`는 `onMounted`에서 `route.params.cityId`를 **한 번만** 읽고 있었다.
+Vue Router는 같은 라우트 안에서 파라미터만 바뀌면 컴포넌트를 **재사용**하므로
+`/weather/city_01` → `/weather/city_03` 이동 시 화면이 서울에 멈춘다.
+
+```js
+onMounted(() => {
+  // 🔴 최초 1회
+  cityData.value = findWeatherCity(String(route.params.cityId))
+})
+
+const cityData = computed(() => findWeatherCity(String(route.params.cityId))) // 🟢
+```
+
+`computed`로 바꾸면 `route`가 반응형이므로 파라미터 변화가 그대로 따라온다.
+같은 이유로 `PracticeTopicView`의 `route.params.topic`도 처음부터 `computed`로 읽었다
+— 주제 탭이 전부 같은 라우트라 여기서는 잠재 버그가 아니라 바로 드러나는 버그가 된다.
 
 ## 품질 관리
 

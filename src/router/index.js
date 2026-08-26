@@ -30,6 +30,16 @@ const router = createRouter({
       component: () => import('../views/WeatherBriefingView.vue'),
     },
     {
+      path: '/practice',
+      name: 'PracticeIndex',
+      component: () => import('../views/PracticeIndexView.vue'),
+    },
+    {
+      path: '/practice/:topic',
+      name: 'PracticeTopic',
+      component: () => import('../views/PracticeTopicView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('../views/NotFoundView.vue'),
