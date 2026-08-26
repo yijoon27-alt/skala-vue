@@ -45,6 +45,9 @@
 // import WatchReactive from './components/practices/composition/WatchReactive.vue'
 // import WatchEffectSample from './components/practices/composition/WatchEffectSample.vue'
 
+// --- Vue Components (p.146~178) ---
+// import LifecycleParent from './components/practices/component/LifecycleParent.vue'
+
 // --- Hands on : Weather Composition (p.145) ---
 // import WeatherComposition from './components/practices/handson/WeatherComposition.vue'
 

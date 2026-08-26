@@ -31,6 +31,7 @@ src/
 │     ├─ form/                # Form Data Binding (p.106~112)
 │     ├─ style/               # Vue Style (p.113~114)
 │     ├─ composition/         # Composition API (p.117~144)
+│     ├─ component/           # Vue Components (p.146~178)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 ├─ assets/ · router/ · stores/ · views/
 ```
@@ -528,6 +529,22 @@ watch(
 
 ---
 
+### 7. Vue Components — Lifecycle (p.146~155)
+
+> ✅ **p.155 Code Challenge** (Component Lifecycle Hook Example) 완료
+
+| 교재      | 실습 내용                                                     | 파일                                      |
+| --------- | ------------------------------------------------------------- | ----------------------------------------- |
+| p.154~155 | `setup` → `onMounted` → `onUpdated` → `onUnmounted` 흐름 확인 | `practices/component/LifecycleChild.vue`  |
+| p.155     | `v-if`로 자식 컴포넌트를 생성·소멸시키는 부모                 | `practices/component/LifecycleParent.vue` |
+
+- `LifecycleParent`에서 `v-if`를 전환해 자식 컴포넌트를 파괴하고 다시 생성한다.
+- `LifecycleChild`는 마운트 후 3초 간격 타이머를 시작하고, 값이 바뀔 때마다 업데이트 훅을 확인한다.
+- 언마운트될 때 `clearInterval()`로 타이머를 정리해 컴포넌트 소멸 후에도 작업이 남는 메모리 누수를 막는다.
+- 이번 Code Challenge는 교재 원본 흐름만 간결하게 구현했으며, 개인 응용은 p.178 Hands-on에 추가한다.
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -589,6 +606,7 @@ watch(
 | `watch(…, { deep: true })`   | `WatchDeep` `WeatherComposition`         | 객체 하위 속성 감시 + 스냅샷 대조로 변경 이력 기록              |
 | `watchEffect()`              | `WatchEffectSample` `WeatherComposition` | 검색어 자동 추적, `onCleanup` 으로 이전 요청 취소               |
 | `toRaw()`                    | `WeatherComposition`                     | 반응형 프록시를 벗겨 `structuredClone` 으로 스냅샷 뜨기         |
+| Lifecycle Hooks              | `LifecycleChild`                         | 마운트 시 타이머 시작, 업데이트 확인, 언마운트 시 타이머 정리   |
 
 ### 스타일
 
