@@ -47,6 +47,7 @@
 
 // --- Vue Components (p.146~178) ---
 // import LifecycleParent from './components/practices/component/LifecycleParent.vue'
+// import PropsEmitsParent from './components/practices/component/PropsEmitsParent.vue'
 
 // --- Hands on : Weather Composition (p.145) ---
 // import WeatherComposition from './components/practices/handson/WeatherComposition.vue'

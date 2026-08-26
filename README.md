@@ -545,6 +545,22 @@ watch(
 
 ---
 
+### 8. Vue Components — Props & Emits (p.156~172)
+
+> ✅ **p.172 Code Challenge** (Props & Emits Example) 완료
+
+| 교재      | 실습 내용                                       | 파일                                       |
+| --------- | ----------------------------------------------- | ------------------------------------------ |
+| p.168~172 | 부모 상태를 Props로 자식에게 전달               | `practices/component/PropsEmitsParent.vue` |
+| p.168~172 | Emit 이벤트와 Payload로 부모에게 상태 변경 요청 | `practices/component/PropsEmitsChild.vue`  |
+
+- 부모는 `:parent-data="message"`로 반응형 상태를 자식에게 내려보낸다.
+- 자식은 `defineProps()`로 전달받을 값의 타입과 필수 여부를 선언하며, Props를 직접 수정하지 않는다.
+- 자식이 `emit('update-request', payload)`를 실행하면 부모의 `@update-request` 핸들러가 Payload를 받아 상태를 변경한다.
+- 이번 Code Challenge도 교재 원본 흐름만 구현했으며, 개인 응용은 p.178 Hands-on에 추가한다.
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -607,6 +623,15 @@ watch(
 | `watchEffect()`              | `WatchEffectSample` `WeatherComposition` | 검색어 자동 추적, `onCleanup` 으로 이전 요청 취소               |
 | `toRaw()`                    | `WeatherComposition`                     | 반응형 프록시를 벗겨 `structuredClone` 으로 스냅샷 뜨기         |
 | Lifecycle Hooks              | `LifecycleChild`                         | 마운트 시 타이머 시작, 업데이트 확인, 언마운트 시 타이머 정리   |
+
+### 컴포넌트 연동
+
+| 문법            | 쓴 곳                                | 무엇에 썼나                                       |
+| --------------- | ------------------------------------ | ------------------------------------------------- |
+| `defineProps()` | `PropsEmitsChild`                    | 부모가 전달할 데이터의 이름·타입·필수 여부 선언   |
+| `defineEmits()` | `PropsEmitsChild`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언      |
+| Props 바인딩    | `PropsEmitsParent`                   | `:parent-data`로 부모 상태를 자식에게 전달        |
+| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` | `@update-request`와 Payload로 부모 상태 변경 요청 |
 
 ### 스타일
 
