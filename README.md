@@ -541,7 +541,16 @@ watch(
 - `LifecycleParent`에서 `v-if`를 전환해 자식 컴포넌트를 파괴하고 다시 생성한다.
 - `LifecycleChild`는 마운트 후 3초 간격 타이머를 시작하고, 값이 바뀔 때마다 업데이트 훅을 확인한다.
 - 언마운트될 때 `clearInterval()`로 타이머를 정리해 컴포넌트 소멸 후에도 작업이 남는 메모리 누수를 막는다.
-- 이번 Code Challenge는 교재 원본 흐름만 간결하게 구현했으며, 개인 응용은 p.178 Hands-on에 추가한다.
+- 교재 원본 흐름은 그대로 유지하고, 아래 개인 응용을 부모 컴포넌트 하단에 추가했다.
+
+#### Customization ⑳ 부모와 자식의 상태 수명 비교
+
+교재 예제는 Lifecycle Hook 실행 순서를 콘솔로 확인하지만, 컴포넌트가 소멸할 때
+**어떤 상태가 사라지고 어떤 상태가 남는지**는 화면에서 비교하기 어렵다.
+
+- 부모에 별도 카운트를 두어 자식을 파괴하고 다시 생성해도 값이 유지되는 것을 확인한다.
+- 자식의 로컬 카운트는 컴포넌트를 다시 생성하면 0부터 시작한다.
+- 자식 제거 횟수를 부모 상태로 누적해 부모와 자식의 상태 수명 차이를 한 화면에서 관찰한다.
 
 ---
 
@@ -557,7 +566,15 @@ watch(
 - 부모는 `:parent-data="message"`로 반응형 상태를 자식에게 내려보낸다.
 - 자식은 `defineProps()`로 전달받을 값의 타입과 필수 여부를 선언하며, Props를 직접 수정하지 않는다.
 - 자식이 `emit('update-request', payload)`를 실행하면 부모의 `@update-request` 핸들러가 Payload를 받아 상태를 변경한다.
-- 이번 Code Challenge도 교재 원본 흐름만 구현했으며, 개인 응용은 p.178 Hands-on에 추가한다.
+- 교재의 고정 Payload 버튼은 그대로 유지하고, 아래 개인 응용을 자식 컴포넌트 하단에 추가했다.
+
+#### Customization ㉑ 직접 입력한 동적 Payload 전달
+
+교재 예제는 항상 같은 문자열만 Emit하므로 Payload가 실제 사용자 입력에 따라 달라지는 흐름이 보이지 않는다.
+
+- 자식 입력창의 값을 `v-model`로 관리하고 폼 제출 시 `emit()`의 Payload로 전달한다.
+- `.trim()`과 빈 값 검사를 적용하고, 최대 40자 제한과 글자 수 표시를 추가했다.
+- 부모는 같은 이벤트 핸들러로 고정·동적 Payload를 모두 처리하고 갱신 횟수를 누적한다.
 
 ---
 
@@ -567,15 +584,15 @@ watch(
 
 ### 디렉티브
 
-| 문법                                      | 쓴 곳                                                   | 무엇에 썼나                                           |
-| ----------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------- |
-| `v-text` / `v-html`                       | `VTextSample` `VHtmlSample` `VHtmlXssSample`            | 텍스트 출력, HTML 삽입과 XSS 위험 확인                |
-| `v-bind` (`:`)                            | 전 컴포넌트                                             | 속성·클래스·스타일 바인딩, `:key`, `:value`, `:style` |
-| `v-if` / `v-else-if` / `v-else`           | `VIfSample` `WeatherMockup`                             | 로그인 분기, 학점 다중 분기, 25도 기준 라벨           |
-| `v-show`                                  | `VShowSample`                                           | `display:none` 토글 — `v-if` 와의 차이 확인           |
-| `v-for`                                   | `VForSample` `WeatherMockup`                            | 목록 렌더, **중첩 `v-for`**(시간대별 예보)            |
-| `v-model`                                 | `VModelBasic` `VModelFormElements` `VModelModifier`     | 양방향 바인딩, Form 요소 5종 매핑                     |
-| `v-pre` / `v-cloak` / `v-once` / `v-memo` | `VPreSample` `VCloakSample` `VOnceSample` `VMemoSample` | 컴파일 건너뛰기, 깜빡임 방지, 1회 렌더, 조건부 렌더   |
+| 문법                                      | 쓴 곳                                                                 | 무엇에 썼나                                           |
+| ----------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
+| `v-text` / `v-html`                       | `VTextSample` `VHtmlSample` `VHtmlXssSample`                          | 텍스트 출력, HTML 삽입과 XSS 위험 확인                |
+| `v-bind` (`:`)                            | 전 컴포넌트                                                           | 속성·클래스·스타일 바인딩, `:key`, `:value`, `:style` |
+| `v-if` / `v-else-if` / `v-else`           | `VIfSample` `WeatherMockup`                                           | 로그인 분기, 학점 다중 분기, 25도 기준 라벨           |
+| `v-show`                                  | `VShowSample`                                                         | `display:none` 토글 — `v-if` 와의 차이 확인           |
+| `v-for`                                   | `VForSample` `WeatherMockup`                                          | 목록 렌더, **중첩 `v-for`**(시간대별 예보)            |
+| `v-model`                                 | `VModelBasic` `VModelFormElements` `VModelModifier` `PropsEmitsChild` | 양방향 바인딩, Form 요소 5종 매핑, 동적 Payload 입력  |
+| `v-pre` / `v-cloak` / `v-once` / `v-memo` | `VPreSample` `VCloakSample` `VOnceSample` `VMemoSample`               | 컴파일 건너뛰기, 깜빡임 방지, 1회 렌더, 조건부 렌더   |
 
 ### 이벤트
 
@@ -590,12 +607,12 @@ watch(
 
 ### 이벤트 수식어
 
-| 수식어                        | 쓴 곳                                 | 무엇에 썼나                           |
-| ----------------------------- | ------------------------------------- | ------------------------------------- |
-| `.prevent`                    | `EventModifierSample` `WeatherMockup` | 링크 이동 차단, 방향키 기본 동작 차단 |
-| `.stop`                       | `EventModifierSample` `WeatherMockup` | 카드 클릭과 버튼 클릭이 겹치지 않게   |
-| `.once` / `.self`             | `EventModifierSample` `WeatherMockup` | 1회만 실행, 모달 배경 클릭으로만 닫기 |
-| `.up` `.down` `.enter` `.esc` | `WeatherMockup`                       | 검색 결과 키보드 이동·선택·초기화     |
+| 수식어                        | 쓴 곳                                                   | 무엇에 썼나                                 |
+| ----------------------------- | ------------------------------------------------------- | ------------------------------------------- |
+| `.prevent`                    | `EventModifierSample` `WeatherMockup` `PropsEmitsChild` | 링크 이동·방향키 기본 동작·폼 새로고침 차단 |
+| `.stop`                       | `EventModifierSample` `WeatherMockup`                   | 카드 클릭과 버튼 클릭이 겹치지 않게         |
+| `.once` / `.self`             | `EventModifierSample` `WeatherMockup`                   | 1회만 실행, 모달 배경 클릭으로만 닫기       |
+| `.up` `.down` `.enter` `.esc` | `WeatherMockup`                                         | 검색 결과 키보드 이동·선택·초기화           |
 
 ### v-model 수식어
 
@@ -626,12 +643,12 @@ watch(
 
 ### 컴포넌트 연동
 
-| 문법            | 쓴 곳                                | 무엇에 썼나                                       |
-| --------------- | ------------------------------------ | ------------------------------------------------- |
-| `defineProps()` | `PropsEmitsChild`                    | 부모가 전달할 데이터의 이름·타입·필수 여부 선언   |
-| `defineEmits()` | `PropsEmitsChild`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언      |
-| Props 바인딩    | `PropsEmitsParent`                   | `:parent-data`로 부모 상태를 자식에게 전달        |
-| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` | `@update-request`와 Payload로 부모 상태 변경 요청 |
+| 문법            | 쓴 곳                                | 무엇에 썼나                                                 |
+| --------------- | ------------------------------------ | ----------------------------------------------------------- |
+| `defineProps()` | `PropsEmitsChild`                    | 부모가 전달할 데이터의 이름·타입·필수 여부 선언             |
+| `defineEmits()` | `PropsEmitsChild`                    | 자식이 부모에게 보낼 커스텀 이벤트 타입 선언                |
+| Props 바인딩    | `PropsEmitsParent`                   | `:parent-data`로 부모 상태를 자식에게 전달                  |
+| Custom Event    | `PropsEmitsParent` `PropsEmitsChild` | `@update-request`와 고정·동적 Payload로 부모 상태 변경 요청 |
 
 ### 스타일
 

@@ -3,9 +3,11 @@ import { ref } from 'vue'
 import PropsEmitsChild from './PropsEmitsChild.vue'
 
 const message = ref('Parent 초기 메시지')
+const updateCount = ref(0)
 
 const handleUpdateRequest = (newValue) => {
   message.value = newValue
+  updateCount.value++
 }
 </script>
 
@@ -17,6 +19,7 @@ const handleUpdateRequest = (newValue) => {
       <p>
         현재 로컬 데이터(State): <strong>{{ message }}</strong>
       </p>
+      <p>자식 요청으로 갱신된 횟수: {{ updateCount }}</p>
       <PropsEmitsChild :parent-data="message" @update-request="handleUpdateRequest" />
     </div>
   </div>
