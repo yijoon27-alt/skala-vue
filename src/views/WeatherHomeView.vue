@@ -1,26 +1,44 @@
 <script setup>
-import { computed, ref, watch, watchEffect } from 'vue'
-import BaseDashboardCard from './BaseDashboardCard.vue'
-import SearchBar from './SearchBar.vue'
-import WeatherCard from './WeatherCard.vue'
-import WeatherDetailModal from './WeatherDetailModal.vue'
-import WeatherSummary from './WeatherSummary.vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import BaseDashboardCard from '@/components/practices/handson/weather-component/BaseDashboardCard.vue'
+import SearchBar from '@/components/practices/handson/weather-component/SearchBar.vue'
+import WeatherCard from '@/components/practices/handson/weather-component/WeatherCard.vue'
+import WeatherSummary from '@/components/practices/handson/weather-component/WeatherSummary.vue'
 import { weatherCities } from '@/data/weather'
 import { hangulMatch, withParticle } from '@/utils/hangul'
 
-const weatherList = ref(weatherCities)
+const route = useRoute()
+const router = useRouter()
 
 const searchQuery = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 도시를 검색해 보세요.')
 const selectedCityId = ref('')
 const favoriteIds = ref([])
 const activeIndex = ref(-1)
-const detailCity = ref(null)
+
+const routeSearch = () => (typeof route.query.search === 'string' ? route.query.search : '')
+
+const restoreSearchFromRoute = () => {
+  const query = routeSearch()
+  if (searchQuery.value !== query) searchQuery.value = query
+}
+
+onMounted(restoreSearchFromRoute)
+watch(() => route.query.search, restoreSearchFromRoute)
+
+watch(searchQuery, (newQuery) => {
+  if (newQuery === routeSearch()) return
+  router.replace({
+    name: 'WeatherHome',
+    query: newQuery ? { search: newQuery } : {},
+  })
+})
 
 const filteredWeatherList = computed(() => {
   const query = searchQuery.value.trim()
-  if (!query) return weatherList.value
-  return weatherList.value.filter((city) => hangulMatch(city.name, query))
+  if (!query) return weatherCities
+  return weatherCities.filter((city) => hangulMatch(city.name, query))
 })
 
 const isChosungQuery = computed(() => /^[ㄱ-ㅎ]+$/.test(searchQuery.value.trim()))
@@ -36,14 +54,6 @@ const summary = computed(() => {
     average: Math.round(list.reduce((sum, city) => sum + city.temp, 0) / list.length),
     hottest: hottest.name,
   }
-})
-
-watch(selectedCityInfo, (newInfo) => {
-  console.log(`[선택 변경] ${newInfo}`)
-})
-
-watchEffect(() => {
-  console.log(`[검색 추적] "${searchQuery.value}"`)
 })
 
 const updateSearchQuery = (value) => {
@@ -80,23 +90,23 @@ const toggleFavorite = (cityId) => {
     : [...favoriteIds.value, cityId]
 }
 
-const showDetail = (city) => {
-  window.alert(`${city.name}의 현재 날씨는 [${city.status}] 상태입니다.`)
-}
-
-const openModal = (city) => {
-  detailCity.value = city
+const handleDetailJump = (city) => {
+  router.push(`/weather/${city.id}`)
 }
 </script>
 
 <template>
-  <main class="dashboard-wrapper">
-    <h1>지역별 날씨 대시보드</h1>
+  <section class="dashboard-wrapper">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">WEATHER DASHBOARD</p>
+        <h1>지역별 날씨</h1>
+      </div>
+      <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교하기 →</RouterLink>
+    </header>
 
     <BaseDashboardCard>
-      <template #header>
-        <h2>도시 검색</h2>
-      </template>
+      <template #header><h2>도시 검색</h2></template>
       <SearchBar
         :current-query="searchQuery"
         :result-count="filteredWeatherList.length"
@@ -108,16 +118,14 @@ const openModal = (city) => {
         @reset-query="resetSearch"
       />
       <template #footer>
-        <small>검색 조건과 날씨 데이터는 부모 컴포넌트가 관리합니다.</small>
+        <small>검색어는 URL에 저장되어 새로고침 후에도 복원됩니다.</small>
       </template>
     </BaseDashboardCard>
 
     <WeatherSummary :summary="summary" :favorite-count="favoriteIds.length" />
 
     <BaseDashboardCard>
-      <template #header>
-        <h2>지역별 날씨 현황</h2>
-      </template>
+      <template #header><h2>지역별 날씨 현황</h2></template>
       <WeatherCard
         v-for="(city, index) in filteredWeatherList"
         :key="city.id"
@@ -125,41 +133,56 @@ const openModal = (city) => {
         :is-favorite="favoriteIds.includes(city.id)"
         :is-highlighted="activeIndex === index"
         :is-selected="selectedCityId === city.id"
+        detail-label="상세보기"
+        :show-panel-action="false"
         @select-card="selectCity"
-        @click-detail="showDetail"
-        @open-modal="openModal"
+        @click-detail="handleDetailJump"
         @toggle-favorite="toggleFavorite"
       />
       <p v-if="filteredWeatherList.length === 0" class="empty">
         검색 결과와 일치하는 도시가 없습니다.
       </p>
-      <template #footer>
-        <p class="status-bar">{{ selectedCityInfo }}</p>
-      </template>
+      <template #footer
+        ><p class="status-bar">{{ selectedCityInfo }}</p></template
+      >
     </BaseDashboardCard>
 
     <section class="feature-summary">
       <h2>✅ 기본 기능</h2>
-      <p>컴포넌트 분리 · Props 하향 전달 · Emits 상향 전달 · Slot 레이아웃 주입</p>
+      <p>RouterView 페이지 렌더링 · 동적 상세 경로 · Programmatic Navigation</p>
       <h2>✨ 추가 기능</h2>
-      <p>초성 검색 · 키보드 탐색 · 상세 모달 · Named Slot · 요약 컴포넌트 · 즐겨찾기</p>
+      <p>초성 검색 · 키보드 탐색 · URL 검색 상태 복원 · 두 도시 비교</p>
     </section>
-
-    <WeatherDetailModal v-if="detailCity" :city="detailCity" @close="detailCity = null" />
-  </main>
+  </section>
 </template>
 
 <style scoped>
 .dashboard-wrapper {
   width: min(720px, 100%);
   margin: 0 auto;
-  padding: 20px;
 }
 
-h1 {
+.page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
+.page-heading a {
+  color: #6c5ce7;
+  font-weight: 700;
+}
+
+.eyebrow {
+  color: #6c5ce7;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+h1,
 h2,
 p {
   margin: 0;
@@ -184,11 +207,5 @@ p {
 
 .feature-summary h2:not(:first-child) {
   margin-top: 14px;
-}
-
-@media (max-width: 560px) {
-  .dashboard-wrapper {
-    padding: 10px;
-  }
 }
 </style>

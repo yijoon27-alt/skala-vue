@@ -22,7 +22,7 @@ npm run lint    # ESLint 검사
 
 ```
 src/
-├─ App.vue                    # 실습 컴포넌트를 갈아 끼우며 확인하는 진입점
+├─ App.vue                    # RouterLink 네비게이션 + RouterView 레이아웃
 ├─ components/
 │  └─ practices/              # 교재 실습 컴포넌트 모음
 │     ├─ basic/               # Dev Setup (p.69~71)
@@ -34,10 +34,13 @@ src/
 │     ├─ component/           # Vue Components (p.146~178)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
-├─ assets/ · router/ · stores/ · views/
+├─ data/weather.js            # 대시보드·상세·비교 View가 공유하는 Mock Data
+├─ router/index.js            # 지연 로딩·동적 경로·Catch-all Route
+├─ views/                     # WeatherHome·Detail·About·Compare·NotFound
+└─ assets/ · stores/ · utils/
 ```
 
-`App.vue` 상단의 import 주석을 풀고 `<template>` 태그를 함께 바꿔 실습을 확인합니다.
+`App.vue`의 상단 네비게이션으로 대시보드·도시 비교·서비스 소개 화면을 새로고침 없이 전환합니다.
 
 ---
 
@@ -643,6 +646,35 @@ watch(
 
 ---
 
+### 11. Hands on — Weather Router (p.196~197)
+
+`App.vue`를 단일 실습 컴포넌트 진입점에서 라우터 레이아웃으로 전환했다.
+
+| 요구사항                                | 구현                                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 1. Router 지연 로딩 + Catch-all         | Home 외 View를 Dynamic Import하고 `/:pathMatch(.*)*`를 마지막에 배치                         |
+| 2. `App.vue` Navigation Bar + 메인 영역 | `RouterLink` 3개와 `RouterView` 배치, 활성 메뉴 표시                                         |
+| 3. `WeatherHomeView`                    | `WeatherParent`의 검색·카드·요약 구조를 View로 전환하고 `router.push('/weather/' + id)` 처리 |
+| 4. `WeatherDetailView`                  | `route.params.cityId`로 Mount 시점에 Mock Data 도시를 선택하고 기온·체감·습도·풍속 표시      |
+| 5. `WeatherAboutView`                   | 서비스·Router 구조 소개와 `router.push()` 메인 복귀 버튼                                     |
+| 6. 추가 View + Routing                  | `/compare` 경로의 `WeatherCompareView` 추가                                                  |
+
+#### Customization ㉖ 공유 가능한 두 도시 비교 View
+
+추가 View를 정적 안내 화면으로 두지 않고, 두 도시의 기온·체감온도·습도·풍속을 한 화면에서
+비교하는 기능으로 만들었다.
+
+- 두 `<select>`의 선택값을 `left` / `right` Query String으로 보관한다.
+- 선택이 바뀔 때 `router.replace()`를 써서 주소는 유지하되 히스토리를 불필요하게 쌓지 않는다.
+- 예: `/compare?left=city_01&right=city_04`를 공유하면 서울·제주 비교 상태가 그대로 복원된다.
+- 비교 중인 각 도시의 동적 상세 경로로 즉시 이동할 수 있고, 두 도시 위치를 바꾸는 기능도 추가했다.
+
+> 📌 알게 된 점 — 검색어나 필터처럼 자주 바뀌는 상태를 `push()`로 동기화하면 글자 하나마다
+> 뒤로 가기 이력이 쌓인다. 이런 상태는 `replace()`로 현재 이력만 바꾸고, 상세 페이지처럼 사용자가
+> 독립된 화면 전환을 의도한 경우에는 `push()`를 쓰는 것이 맞다.
+
+---
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -717,6 +749,17 @@ watch(
 | Default Slot    | `SlotDefaultChild` `BaseDashboardCard`                                              | 부모가 자식의 본문 영역에 마크업 주입                |
 | Named Slot      | `SlotNamedChild` `BaseDashboardCard`                                                | `header`·`footer` 등 이름으로 주입 위치 지정         |
 | Scoped Slot     | `SlotScopedParent` `SlotScopedChild`                                                | 자식의 로컬 데이터를 Slot Props로 부모 마크업에 전달 |
+
+### Vue Router
+
+| 문법                                    | 쓴 곳                                                                     | 무엇에 썼나                                           |
+| --------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `createRouter()` / `createWebHistory()` | `router/index.js`                                                         | SPA 경로 규칙과 History Mode 설정                     |
+| `<RouterLink>` / `<RouterView>`         | `App.vue` `WeatherHomeView` 외                                            | 새로고침 없는 링크와 현재 View 렌더링 영역            |
+| `useRoute()`                            | `WeatherHomeView` `WeatherDetailView` `WeatherCompareView` `NotFoundView` | `params`·`query`·`fullPath` 수신                      |
+| `useRouter()`                           | Router Hands-on View 전체                                                 | `push()`·`replace()`·`back()` Programmatic Navigation |
+| Dynamic Route / Query String            | `/weather/:cityId` `/compare?left=...&right=...`                          | 도시 ID 상세 매칭, 검색·비교 상태 URL 동기화          |
+| Dynamic Import / Catch-all              | `router/index.js`                                                         | View 지연 로딩, 미매핑 주소를 404 View로 처리         |
 
 ### 스타일
 

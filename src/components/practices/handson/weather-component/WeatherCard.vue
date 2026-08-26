@@ -16,6 +16,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  detailLabel: {
+    type: String,
+    default: '빠른 알림',
+  },
+  showPanelAction: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['select-card', 'click-detail', 'open-modal', 'toggle-favorite'])
@@ -45,10 +53,12 @@ const selectCard = () => {
       >
         {{ isFavorite ? '★ 즐겨찾기 해제' : '☆ 즐겨찾기' }}
       </button>
-      <button type="button" @click.stop="emit('click-detail', cityItem.name, cityItem.status)">
-        빠른 알림
+      <button type="button" @click.stop="emit('click-detail', cityItem)">
+        {{ detailLabel }}
       </button>
-      <button type="button" @click.stop="emit('open-modal', cityItem)">상세 패널</button>
+      <button v-if="showPanelAction" type="button" @click.stop="emit('open-modal', cityItem)">
+        상세 패널
+      </button>
     </div>
   </article>
 </template>
