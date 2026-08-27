@@ -1072,7 +1072,7 @@ _▲ `/settings` — `$onAction` 이 기록한 변경 이력(이전 → 이후)�
 
 ```js
 // 교재 p.224 — 소스에 키가 그대로 박혀 있다
-const API_KEY = '8964edc63b366d27b5b728b7976570b7'
+const API_KEY = '8964edc6…' // 교재에는 32자리 키가 전부 적혀 있다
 
 // 이 저장소는 Public 이라 .env 로 뺐다 (.gitignore 에 등록, .env.example 만 커밋)
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
