@@ -2406,35 +2406,53 @@ Element Plus 도입 전   366.5 kB
 
 **https://yijoon27-alt.github.io/skala-vue/**
 
-호스팅은 **GitHub Pages** 를 골랐다. 소스 저장소가 이미 GitHub Public 이라
+호스팅은 **GitHub Pages** 를 주력으로 골랐다. 소스 저장소가 이미 GitHub Public 이라
 별도 서비스에 가입하지 않고 저장소 하나로 소스·배포를 함께 제출할 수 있다.
+확인용으로 **Vercel** 에도 같은 저장소를 연결해 두 곳 모두에서 동작하도록 맞췄다.
+
+| 호스팅       | 주소                                      | 빌드 트리거           |
+| ------------ | ----------------------------------------- | --------------------- |
+| GitHub Pages | https://yijoon27-alt.github.io/skala-vue/ | Actions (`main` push) |
+| Vercel       | https://skala-vue-orcin.vercel.app/       | Vercel (`main` push)  |
 
 `.github/workflows/deploy.yml` 이 `main` 브랜치 push 마다
 `npm ci` → `npx eslint .` → `npm run build` → Pages 배포까지 자동으로 돌린다.
 **린트가 깨지면 배포도 멈춘다** — 교재 p.274 의 "ESLint 에러 0" 요건을 사람이 아니라 CI 가 지킨다.
 
-| 항목        | 상태                                                                         |
-| ----------- | ---------------------------------------------------------------------------- |
-| 소스코드    | ✅ GitHub Public 저장소                                                      |
-| 배포 결과   | ✅ GitHub Pages (Actions 자동 배포) — 2026-08-27 라이브 확인 (실시간 데이터) |
-| Axios       | ✅ p.213~230 — 키는 `.env` 분리, 실패 시 샘플 데이터 폴백                    |
-| UI Library  | ✅ p.231~249 — Element Plus                                                  |
-| 빌드 · 배포 | ✅ p.250~274 — Code Challenge 4종 + 실제 배포                                |
+| 항목        | 상태                                                                        |
+| ----------- | --------------------------------------------------------------------------- |
+| 소스코드    | ✅ GitHub Public 저장소                                                     |
+| 배포 결과   | ✅ GitHub Pages + Vercel 이중 배포 — 2026-08-27 라이브 확인 (실시간 데이터) |
+| Axios       | ✅ p.213~230 — 키는 `.env` 분리, 실패 시 샘플 데이터 폴백                   |
+| UI Library  | ✅ p.231~249 — Element Plus                                                 |
+| 빌드 · 배포 | ✅ p.250~274 — Code Challenge 4종 + 실제 배포                               |
 
 ### 배포하면서 부딪힌 것 4가지
 
-**1. asset 경로에 저장소 이름이 붙어야 한다**
+**1. asset 경로 접두사는 호스팅마다 다르다**
 
-GitHub Pages 는 `https://<user>.github.io/<repo>/` 하위에서 서비스된다.
+GitHub Pages 는 `https://<user>.github.io/<repo>/` 하위에서 서비스되므로
 `base` 를 그대로 두면 빌드된 HTML 이 `/assets/index.js` 를 찾아가 **흰 화면**이 된다.
+그래서 처음에는 빌드일 때만 `/skala-vue/` 를 붙이도록 했다.
+
+그런데 Vercel 에도 배포해 보니 **정반대 문제**가 났다. Vercel 은 앱을 도메인 루트에 놓기 때문에
+`/skala-vue/assets/...` 를 찾아가서 똑같이 흰 화면이 된다(실제로 asset 이 404, 본문 0줄).
+**한쪽을 맞추면 다른 쪽이 깨지는 값**이라 코드에 박으면 안 되는 것이었다.
 
 ```js
-// vite.config.js — 개발 서버는 '/' 그대로 두고 빌드 때만 붙인다
-base: command === 'build' ? '/skala-vue/' : '/',
+// vite.config.js — 접두사를 빌드 환경변수로 받는다
+base: process.env.VITE_BASE_PATH || '/',
 ```
 
-`base` 를 항상 `/skala-vue/` 로 두면 `npm run dev` 주소까지 바뀌어 버려
-교재 p.197 의 `localhost:3000/` 과 어긋난다. 그래서 `command` 로 갈랐다.
+```yaml
+# .github/workflows/deploy.yml — Pages 빌드에만 접두사를 넣는다
+env:
+  VITE_BASE_PATH: /skala-vue/
+```
+
+Vercel 과 `npm run dev` 는 값이 없으므로 기본값 `/` 를 쓴다.
+덕분에 **같은 저장소 하나로 두 호스팅에 동시 배포**할 수 있고,
+개발 서버 주소도 교재 p.197 의 `localhost:3000/` 그대로 유지된다.
 
 **2. History Mode + 정적 호스팅 = 새로고침 404**
 
@@ -2449,6 +2467,13 @@ GitHub Pages 는 없는 경로에 `404.html` 을 돌려주므로, 빌드 후 `in
 
 Vercel 은 `vercel.json` rewrite, Netlify 는 `_redirects` 로 같은 일을 한다.
 **호스팅마다 이름만 다르고 하는 일은 똑같다** — 없는 경로를 SPA 진입점으로 되돌리는 것.
+
+Vercel 에서는 `404.html` 규칙이 통하지 않아 실제로 `/weather/city_01` 이 404 였다.
+그래서 `vercel.json` 을 따로 뒀다.
+
+```json
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
 
 배포 후 실측해 보니 `/skala-vue/weather/city_01` 은 **HTTP 상태 코드가 404 로 온다.**
 그런데 본문이 `index.html` 과 같은 SPA 진입점이라 브라우저에서는 상세 화면이 정상으로 그려진다.

@@ -39,6 +39,8 @@ jobs:
         # Secret 이 없으면 앱이 샘플 데이터로 동작한다 (weatherStore 폴백).
         env:
           VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
+          # GitHub Pages 는 저장소 이름 하위에서 서비스된다 (Vercel 은 루트라 이 값이 없다)
+          VITE_BASE_PATH: /skala-vue/
         run: npm run build
 
       # 저장소 Settings → Pages → Source 를 "GitHub Actions" 로 한 번 켜 두면
