@@ -2403,15 +2403,15 @@ Element Plus 도입 전   366.5 kB
 `npm ci` → `npx eslint .` → `npm run build` → Pages 배포까지 자동으로 돌린다.
 **린트가 깨지면 배포도 멈춘다** — 교재 p.274 의 "ESLint 에러 0" 요건을 사람이 아니라 CI 가 지킨다.
 
-| 항목        | 상태                                                      |
-| ----------- | --------------------------------------------------------- |
-| 소스코드    | ✅ GitHub Public 저장소                                   |
-| 배포 결과   | ✅ GitHub Pages (Actions 자동 배포)                       |
-| Axios       | ✅ p.213~230 — 키는 `.env` 분리, 실패 시 샘플 데이터 폴백 |
-| UI Library  | ✅ p.231~249 — Element Plus                               |
-| 빌드 · 배포 | ✅ p.250~274 — Code Challenge 4종 + 실제 배포             |
+| 항목        | 상태                                                         |
+| ----------- | ------------------------------------------------------------ |
+| 소스코드    | ✅ GitHub Public 저장소                                      |
+| 배포 결과   | ✅ GitHub Pages (Actions 자동 배포) — 2026-08-27 라이브 확인 |
+| Axios       | ✅ p.213~230 — 키는 `.env` 분리, 실패 시 샘플 데이터 폴백    |
+| UI Library  | ✅ p.231~249 — Element Plus                                  |
+| 빌드 · 배포 | ✅ p.250~274 — Code Challenge 4종 + 실제 배포                |
 
-### 배포하면서 부딪힌 것 3가지
+### 배포하면서 부딪힌 것 4가지
 
 **1. asset 경로에 저장소 이름이 붙어야 한다**
 
@@ -2440,6 +2440,10 @@ GitHub Pages 는 없는 경로에 `404.html` 을 돌려주므로, 빌드 후 `in
 Vercel 은 `vercel.json` rewrite, Netlify 는 `_redirects` 로 같은 일을 한다.
 **호스팅마다 이름만 다르고 하는 일은 똑같다** — 없는 경로를 SPA 진입점으로 되돌리는 것.
 
+배포 후 실측해 보니 `/skala-vue/weather/city_01` 은 **HTTP 상태 코드가 404 로 온다.**
+그런데 본문이 `index.html` 과 같은 SPA 진입점이라 브라우저에서는 상세 화면이 정상으로 그려진다.
+`curl` 의 상태 코드만 보고 실패로 판단하면 안 되고, **실제 렌더 결과로 확인해야 한다.**
+
 **3. API 키를 CI 에 넘기는 방법**
 
 `.env` 는 커밋하지 않으므로 CI 에는 키가 없다. GitHub Actions Secret 으로 주입한다.
@@ -2453,6 +2457,18 @@ Secret 을 등록하지 않아도 배포는 성공하고, 앱은 `weatherStore` 
 샘플 데이터로 동작하며 출처 배지만 `샘플 데이터` 로 남는다.
 다만 아래 「품질 관리」에 적었듯 **Secret 을 써도 빌드 산출물에는 키가 평문으로 박힌다.**
 Secret 이 막아 주는 것은 저장소 유출이지 브라우저 노출이 아니다.
+
+**4. Pages 사이트를 먼저 켜 두지 않으면 워크플로가 헛돈다**
+
+처음에는 `actions/configure-pages` 에 `enablement: true` 를 줘서
+워크플로가 Pages 사이트까지 만들게 하려 했다. **`GITHUB_TOKEN` 권한으로는 사이트를 만들 수 없어** 실패한다.
+
+저장소 Settings → Pages → Source 를 **GitHub Actions** 로 사람이 한 번 켜 준 뒤,
+워크플로를 다시 돌려야 배포가 끝까지 간다.
+켜기 전에 돈 실행은 `configure-pages` 가 읽을 사이트가 없어 배포 단계까지 가지 못했다.
+
+`workflow_dispatch` 를 넣어 뒀지만 UI 버튼을 눌러야 하므로,
+재실행은 **빈 커밋 푸시**(`git commit --allow-empty`)로도 걸 수 있다.
 
 ## 품질 관리
 
