@@ -108,9 +108,9 @@ const handleDetailJump = (city) => {
         <h1>지역별 날씨</h1>
       </div>
       <div class="page-actions">
-        <span :class="['source-badge', weatherStore.isLive ? 'on' : 'off']">
+        <el-tag :type="weatherStore.isLive ? 'success' : 'warning'" effect="light" round>
           {{ weatherStore.sourceLabel }}
-        </span>
+        </el-tag>
         <RouterLink
           :to="{
             name: 'WeatherBriefing',
@@ -124,6 +124,16 @@ const handleDetailJump = (city) => {
         <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교하기 →</RouterLink>
       </div>
     </header>
+
+    <el-alert
+      v-if="weatherStore.errorMessage"
+      class="fallback-alert"
+      type="warning"
+      show-icon
+      :closable="false"
+      title="실시간 관측값을 불러오지 못했습니다"
+      :description="`${weatherStore.errorMessage} 저장된 샘플 값으로 표시 중입니다.`"
+    />
 
     <BaseDashboardCard>
       <template #header><h2>도시 검색</h2></template>
@@ -158,6 +168,8 @@ const handleDetailJump = (city) => {
           </label>
         </div>
       </template>
+      <el-skeleton v-if="weatherStore.isLoading" :rows="4" animated />
+
       <WeatherCard
         v-for="(city, index) in filteredWeatherList"
         :key="city.id"
@@ -171,13 +183,14 @@ const handleDetailJump = (city) => {
         @click-detail="handleDetailJump"
         @toggle-favorite="favoriteStore.toggle"
       />
-      <p v-if="filteredWeatherList.length === 0" class="empty">
-        {{
+      <el-empty
+        v-if="filteredWeatherList.length === 0 && !weatherStore.isLoading"
+        :description="
           configStore.favoritesOnly
             ? '즐겨찾기한 도시가 없습니다. 필터를 해제하거나 ☆ 를 눌러 추가하세요.'
             : '검색 결과와 일치하는 도시가 없습니다.'
-        }}
-      </p>
+        "
+      />
       <template #footer
         ><p class="status-bar">{{ selectedCityInfo }}</p></template
       >
@@ -191,7 +204,7 @@ const handleDetailJump = (city) => {
       <h2>✨ 추가 기능</h2>
       <p>
         초성 검색 · 키보드 탐색 · URL 상태 복원 · 두 도시 비교 · 목적별 생활 날씨 브리핑 · 온도 단위
-        전환 · 즐겨찾기 저장 · 설정 변경 이력
+        전환 · 즐겨찾기 저장 · 설정 변경 이력 · 실시간 날씨 연동 · UI 라이브러리 적용
       </p>
     </section>
   </section>
@@ -221,24 +234,6 @@ const handleDetailJump = (city) => {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.source-badge {
-  align-self: center;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.source-badge.on {
-  background: #e5f7ee;
-  color: #1e8449;
-}
-
-.source-badge.off {
-  background: #fdf0e3;
-  color: #b7791f;
 }
 
 .eyebrow {
@@ -271,10 +266,8 @@ p {
   font-size: 14px;
 }
 
-.empty {
-  padding: 20px;
-  color: #c0392b;
-  text-align: center;
+.fallback-alert {
+  margin-bottom: 16px;
 }
 
 .feature-summary {

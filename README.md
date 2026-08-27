@@ -26,7 +26,8 @@ npm run lint           # ESLint 검사
 
 ```
 src/
-├─ App.vue                    # 레이아웃 뼈대 — TheHeader + RouterView 배치
+├─ main.js                    # Pinia · Router · Element Plus 전역 등록
+├─ App.vue                    # 레이아웃 뼈대 — ConfigProvider + TheHeader + RouterView
 ├─ components/
 │  ├─ TheHeader.vue           # 상단 네비게이션 (앱에 하나뿐인 컴포넌트)
 │  ├─ UnitToggler.vue         # 온도 단위(℃/℉) 전환 — Navigation Bar 옆 배치
@@ -40,6 +41,7 @@ src/
 │     ├─ component/           # Vue Components (p.146~178)
 │     ├─ library/             # Pinia (p.199~211)
 │     ├─ axios/               # Axios (p.224~228)
+│     ├─ ui/                  # UI Library — Element Plus (p.246~248)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
 ├─ api/
@@ -1090,7 +1092,7 @@ CRUD 4종은 JSON Placeholder 특성상 서버에 실제로 반영되지 않는�
 
 ### 15. Hands on — Weather Axios (p.230)
 
-교재 요구사항 3개를 모두 구현하고, 그 위에 개인 응용 7건을 얹었다.
+교재 요구사항 3개를 모두 구현하고, 그 위에 개인 응용 8건을 얹었다.
 
 | 요구사항                 | 구현                                                                    |
 | ------------------------ | ----------------------------------------------------------------------- |
@@ -1289,6 +1291,144 @@ export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(ci
 > 조용히 틀리기 시작했다. 트러블슈팅 17(화씨 차이)과 19(상태 문자열)가 같은 종류의 버그다 —
 > **연동은 데이터를 받아오는 일이 아니라, 남의 데이터 규약에 내 로직을 맞추는 일**이었다.
 
+---
+
+### 16. UI Library — Code Challenge (p.246~248)
+
+교재가 지정한 라이브러리는 **Element Plus** 다. 설치 후 `main.js` 에 전역 등록했다(p.236).
+
+```js
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+app.use(ElementPlus)
+```
+
+Code Challenge 3개는 `/practice/ui` 에서 볼 수 있다.
+
+| 파일                    | 교재  | 쓴 컴포넌트                                              |
+| ----------------------- | ----- | -------------------------------------------------------- |
+| `ui/UiRegisterForm.vue` | p.246 | `el-card`(슬롯) · `el-input` · `el-switch` · `ElMessage` |
+| `ui/UiProductCard.vue`  | p.247 | `el-card` · `el-input-number` · `el-rate` · `el-text`    |
+| `ui/UiFileManager.vue`  | p.248 | `el-progress` · `el-button` · `ElMessageBox`             |
+
+`el-card` 는 `#header` · `#footer` 슬롯을 받는다. 3일차에 직접 만들었던 `BaseDashboardCard`
+(Named Slot 실습)와 구조가 같아서, 그때 슬롯을 손으로 만들어 본 게 그대로 이해로 이어졌다.
+
+교재 코드에서 **두 곳을 고쳐야 돌아갔다** (트러블슈팅 24·25).
+
+---
+
+### 17. Hands on — Weather UI Library (p.249)
+
+요구사항은 "외부 UI Library를 선정하고 3일차 과제에 자유롭게 적용한다" 이다.
+**Element Plus** 를 골라 날씨 앱의 대시보드·상세 화면을 다시 짰다.
+
+| 화면      | 적용한 컴포넌트                                                                 |
+| --------- | ------------------------------------------------------------------------------- |
+| 앱 전체   | `el-config-provider`(언어팩·기본 크기) · `el-backtop`                           |
+| 대시보드  | `el-alert` · `el-skeleton` · `el-empty` · `el-row`/`el-col` · `el-statistic`    |
+| 날씨 카드 | `el-card` · `el-tag` · `el-progress` · `el-button`                              |
+| 상세 화면 | `el-page-header` · `el-descriptions` · `el-timeline` · `el-result` · `el-space` |
+
+기존 컴포넌트의 **props / emits 구조는 그대로 두고 마크업만 교체**했다. `WeatherCard` 는
+3일차 컴포넌트 실습 산출물이라, 인터페이스를 유지한 덕에 `/practice/handson` 의 실습 화면도
+같이 개선됐고 부모(`WeatherHomeView`·`WeatherParent`)는 한 줄도 고치지 않았다.
+
+#### Customization ㊸ `el-config-provider` — 언어팩·기본 크기 일괄 제어
+
+p.238 은 이 컴포넌트를 표 한 줄로만 소개하고 예제가 없다. 그런데 **Element Plus 의 기본
+언어는 영어**라서, 그냥 쓰면 확인창 버튼이 `OK` / `Cancel` 로 나오고 날짜 피커도 영어다.
+
+```vue
+<el-config-provider :locale="ko" size="default">
+```
+
+`import ko from 'element-plus/es/locale/lang/ko'` 한 줄이면 앱 전체 문구가 한국어로 바뀐다.
+컴포넌트 기본 크기도 여기서 한 번에 지정해, 화면마다 `size` 를 반복해 적지 않는다.
+
+#### Customization ㊹ 통신 상태 3종을 화면에 명시 — `el-skeleton` · `el-alert` · `el-empty`
+
+교재 Challenge 는 전부 **성공한 상태**만 그린다. 실제 앱에는 성공 말고도 세 가지 상태가 있다.
+
+| 상태             | 컴포넌트                           | 전에는                  |
+| ---------------- | ---------------------------------- | ----------------------- |
+| 데이터 오는 중   | `el-skeleton` (회색 골격)          | 아무것도 없음 — 빈 화면 |
+| 실시간 연결 실패 | `el-alert` (원인 문구 + 폴백 안내) | 작은 배지 하나          |
+| 조건에 맞는 값 0 | `el-empty` (안내 그림 + 문구)      | 빨간 `<p>` 텍스트       |
+
+Axios 단원에서 만든 `weatherStore.isLoading` · `errorMessage` 를 그대로 물렸다. 상태를
+스토어에 이미 갖고 있었기 때문에 화면에서는 **컴포넌트만 갈아 끼우면 됐다.**
+
+#### Customization ㊺ 태그 색을 분류 코드에 매핑한다
+
+`el-tag` 의 `type`(색)을 날씨 상태에 연결할 때, 표시 문자열로 매칭하면 안 된다.
+실시간 API 의 한국어 설명은 `온흐림`·`실비`·`튼구름` 처럼 수십 종이라 색이 조용히 빠진다.
+Axios 단원에서 만든 `condition` 분류 코드(Customization ㊷)를 그대로 재사용했다.
+
+```js
+const CONDITION_TAG = {
+  clear: { type: 'warning', icon: '☀️' },
+  rain: { type: 'primary', icon: '🌧️' },
+  thunderstorm: { type: 'danger', icon: '⛈️' },
+  …
+}
+```
+
+같은 이유로 **대기질 등급(1~5)도 태그 색에 매핑**했다 — 좋음/양호는 `success`,
+나쁨/매우 나쁨은 `danger`. 숫자를 읽지 않아도 색으로 먼저 보인다.
+
+#### Customization ㊻ 상세 화면을 `el-descriptions` + `el-timeline` 로 재구성
+
+p.241·p.242 표에만 있고 교재 예제에는 없는 두 컴포넌트를 실제 데이터에 붙였다.
+
+- **`el-descriptions`** — 관측값 8종(체감·습도·풍속·강수확률 + 대기질 4종)을 명세표로. 직접
+  짠 `<dl>` 그리드보다 항목을 늘리기 쉽고, 대기질처럼 **없을 수도 있는 항목**을 `v-if` 로
+  묶어도 표 정렬이 깨지지 않는다.
+- **`el-timeline`** — 예보 API 가 주는 3시간 간격 8구간을 시간 흐름으로. 강수확률 40% 이상인
+  구간만 색이 찬 점(`hollow=false`)으로 바뀌어, **비 오는 시간대가 한눈에 보인다.**
+
+#### Customization ㊼ `el-progress` 습도·강수 게이지
+
+카드에서 습도 `62%` 를 숫자로만 보면 다른 도시와 비교가 안 된다. 막대로 바꾸니 **도시 6곳을
+스크롤하면서 비교**할 수 있게 됐다. 습도는 파랑, 강수는 초록으로 나눠 두 줄을 겹쳐 읽지 않게 했다.
+
+#### Customization ㊽ 라이브러리 제약을 우회하되 모양은 맞춘다
+
+`el-statistic` 에 도시 이름(문자열)을 넣었더니 Vue 경고가 떴다(트러블슈팅 26). 값 슬롯도 없다.
+그렇다고 이 타일만 모양이 달라지면 안 되므로, **라이브러리가 쓰는 클래스만 빌려** 직접 그렸다.
+
+```html
+<div class="el-statistic">
+  <div class="el-statistic__head">가장 더운 지역</div>
+  <div class="el-statistic__content">
+    <span class="el-statistic__number">{{ summary.hottest }}</span>
+  </div>
+</div>
+```
+
+숫자 타일 3개는 `el-statistic` 을 쓰고 문자열 타일 1개만 이렇게 처리했다. 테마가 바뀌면
+같이 따라간다.
+
+> 📌 알게 된 점 — **번들 크기의 대가가 분명하다.** Element Plus 를 전역 등록하기 전후로
+> 빌드 산출물을 재 봤다.
+>
+> ```
+> 도입 전   366.5 kB
+> 도입 후  1624.8 kB   (4.4배)
+> 그중 CSS  366.0 kB   ← 전체 테마 (gzip 49.7 kB)
+> ```
+>
+> `app.use(ElementPlus)` 는 **쓰지 않는 컴포넌트까지 전부** 번들에 넣는다. 교재 p.236 은 이
+> 방식만 소개하고 대안을 적지 않았다. 이 프로젝트는 실습 아카이브가 여러 컴포넌트를 쓰고
+> 학습용이라 교재 방식을 유지했지만, 실서비스라면 필요한 컴포넌트만 import 하는 쪽이 맞다.
+> **"편해지는 만큼 무거워진다"** 는 걸 숫자로 확인한 게 이번 단원의 소득이다.
+
+> 💭 **회고** — 3일차에 `BaseDashboardCard` 로 Named Slot 을 직접 만들어 본 게 컸다.
+> `el-card` 의 `#header` / `#footer` 를 처음 봤을 때 "아 그거"로 바로 읽혔다. 라이브러리를
+> 쓰는 일이 문법을 건너뛰는 게 아니라, **직접 만들어 본 구조를 알아보는 일**이었다.
+> 반대로 `el-statistic` 처럼 안을 모르면 못 넘는 벽도 있었다 — prop 타입 하나 때문에
+> 멀쩡해 보이는 코드가 경고를 뿜었고, 결국 라이브러리 소스를 열어 슬롯이 없다는 걸 확인해야 했다.
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -1406,6 +1546,27 @@ export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(ci
 | `AbortController` / `signal` | `WeatherLiveView`                   | 이전 요청 취소 — 늦은 응답의 화면 덮어쓰기 방지 |
 | `params` 옵션                | `api/*`                             | Query String 을 문자열 연결 없이 전달           |
 | `import.meta.env.VITE_*`     | `api/openWeather.js` `AxiosWeather` | API 키를 소스에서 분리 (`.env`)                 |
+
+### UI Library (Element Plus)
+
+| 컴포넌트                        | 쓴 곳                              | 무엇에 썼나                                   |
+| ------------------------------- | ---------------------------------- | --------------------------------------------- |
+| `app.use(ElementPlus)`          | `main.js`                          | 전역 등록 + 테마 CSS (교재 p.236)             |
+| `el-config-provider`            | `App.vue`                          | 한국어 언어팩 · 컴포넌트 기본 크기 일괄 지정  |
+| `el-card` (`#header`/`#footer`) | 실습 3종 · `WeatherCard` · 상세    | 카드 레이아웃 — 3일차 Named Slot 과 같은 구조 |
+| `el-input` / `el-switch`        | `UiRegisterForm`                   | 이메일 입력 · 약관 동의 토글                  |
+| `el-input-number` / `el-rate`   | `UiProductCard`                    | 수량 카운터 · 별점                            |
+| `el-button`                     | 전 화면                            | 타입·크기·`loading` 상태 버튼                 |
+| `el-tag`                        | `WeatherCard` · 상세 · 대시보드    | 날씨 상태·대기질·데이터 출처 배지             |
+| `el-progress`                   | `UiFileManager` · `WeatherCard`    | 진행률 · 습도/강수 게이지                     |
+| `el-statistic` / `el-row·col`   | `WeatherSummary`                   | 요약 지표 4종 + 반응형 24분할 그리드          |
+| `el-skeleton`                   | `WeatherHomeView`                  | 실시간 데이터 로딩 중 골격 표시               |
+| `el-alert` / `el-empty`         | `WeatherHomeView`                  | 통신 실패 안내 · 검색 결과 없음               |
+| `el-descriptions`               | `WeatherDetailView`                | 관측값 8종 명세표                             |
+| `el-timeline`                   | `WeatherDetailView`                | 3시간 간격 예보 8구간                         |
+| `el-page-header` / `el-result`  | `WeatherDetailView`                | 뒤로가기 헤더 · 도시 없음 화면                |
+| `el-space` / `el-backtop`       | `WeatherDetailView` · `App.vue`    | 버튼 여백 통제 · 맨 위로 이동                 |
+| `ElMessage` / `ElMessageBox`    | `UiRegisterForm` · `UiFileManager` | 토스트 알림 · `confirm()` 대체 모달           |
 
 ### 스타일
 
@@ -1761,6 +1922,62 @@ const weatherStore = useWeatherStore() // ← 선언은 그 아래
 
 > 📌 알게 된 점 — `<script setup>` 은 위에서 아래로 한 번 실행되는 코드다. 컴포넌트 파일이라
 > 순서가 상관없을 것 같지만, **`ref()` 초기값 계산은 그 자리에서 즉시 일어난다.**
+
+### 24. 다운로드 버튼을 연타하면 진행률이 두 배로 뛴다
+
+교재 p.248 의 `startDownload` 첫 줄이 이렇다.
+
+```js
+if (isDownloading.value) return (isDownloading.value = true)
+```
+
+`return` 뒤에 대입이 붙어 있어서, **다운로드 중이 아닐 때는 `isDownloading` 이 `false` 인 채로
+지나간다.** 중복 실행을 막으려고 둔 가드가 정반대로 동작해, 버튼을 두 번 누르면 `setInterval`
+이 두 개 돌면서 진행률이 20씩이 아니라 40씩 올라간다.
+
+```js
+if (isDownloading.value) return // 진행 중이면 여기서 끝
+isDownloading.value = true // 아니면 잠근다
+```
+
+두 줄로 나누니 해결됐다. `:loading="isDownloading"` 을 버튼에 걸어 두면 눌린 동안 스피너가
+돌아서 **가드가 실제로 걸렸는지 눈으로도 확인된다.**
+
+### 25. 삭제 확인창에 경고 아이콘이 안 나온다
+
+`ElMessageBox.confirm` 의 옵션에 교재는 `type: 'danger'` 를 넣었는데, 아이콘이 비어 있었다.
+Element Plus 의 `type` 은 `success` · `info` · `warning` · `error` 네 가지만 받는다.
+`danger` 는 **버튼(`el-button`)의 타입 이름**이라 헷갈리기 쉽다.
+
+```js
+type: 'warning', // danger (X) — 버튼과 메시지박스의 타입 이름이 다르다
+```
+
+에러도 경고도 안 뜨고 아이콘만 조용히 사라져서 찾는 데 시간이 걸렸다.
+
+### 26. `el-statistic` 에 도시 이름을 넣으면 경고가 뜬다
+
+요약 타일 4개를 `el-statistic` 으로 통일하려다 콘솔에 경고가 찍혔다.
+
+```
+[Vue warn]: Invalid prop: type check failed for prop "value".
+Expected Number | Object, got String with value "제주".
+```
+
+교재 p.242 는 이 컴포넌트를 "숫자에 콤마를 달고 강조해 주는 통계 전용 텍스트 부품" 이라고
+적어 두었는데, 정말 **숫자 전용**이었다. 라이브러리 소스를 열어 보니 `value` 의 타입이
+`[Number, Object]` 이고, 값을 넣을 슬롯도 `title`·`prefix`·`suffix` 뿐이라 없었다.
+
+```js
+value: { type: definePropType([Number, Object]), default: 0 }
+```
+
+숫자 타일 3개만 `el-statistic` 을 쓰고, 도시 이름 타일은 `el-statistic__head` ·
+`el-statistic__number` 클래스를 빌려 직접 그렸다(Customization ㊽).
+
+> 📌 알게 된 점 — 화면은 멀쩡해 보였다. **경고를 열어 보지 않았으면 그냥 넘어갔을 문제**다.
+> UI 라이브러리는 태그만 바꿔 끼우면 되는 것 같아도, 안 되는 케이스는 결국 prop 타입과
+> 슬롯 정의를 직접 확인해야 한다.
 
 ## 4일간의 회고
 

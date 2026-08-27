@@ -263,6 +263,28 @@ export const practiceGroups = [
     ],
   },
   {
+    id: 'ui',
+    title: 'UI Library',
+    summary: 'Element Plus — Form · Data · Feedback 컴포넌트',
+    items: [
+      {
+        name: 'UiRegisterForm',
+        label: '회원가입 폼 — Input · Switch · Message',
+        component: () => import('@/components/practices/ui/UiRegisterForm.vue'),
+      },
+      {
+        name: 'UiProductCard',
+        label: '상품 옵션 — InputNumber · Rate',
+        component: () => import('@/components/practices/ui/UiProductCard.vue'),
+      },
+      {
+        name: 'UiFileManager',
+        label: '파일 관리 — Progress · MessageBox',
+        component: () => import('@/components/practices/ui/UiFileManager.vue'),
+      },
+    ],
+  },
+  {
     id: 'handson',
     title: '종합 과제',
     summary: '날씨 대시보드를 문법 → Composition API → 컴포넌트 구조로 발전시킨 기록',
