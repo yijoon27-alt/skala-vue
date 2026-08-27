@@ -90,6 +90,22 @@ export const weatherCities = [
     precipitation: 70,
     observedAt: '14:00',
   },
+  {
+    id: 'city_06',
+    name: '판교',
+    english: 'Pangyo',
+    fullName: '경기도 성남시 분당구 판교',
+    lat: 37.4058316,
+    lon: 127.0981535,
+    temp: 27,
+    feelsLike: 28,
+    status: '구름',
+    condition: 'clouds',
+    humidity: 64,
+    wind: 3.2,
+    precipitation: 20,
+    observedAt: '14:00',
+  },
 ]
 
 export const findWeatherCity = (cityId) => weatherCities.find((city) => city.id === cityId) ?? null

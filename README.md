@@ -1099,6 +1099,7 @@ CRUD 4종은 JSON Placeholder 특성상 서버에 실제로 반영되지 않는�
 | 3. 기타 외부 API 추가    | **Open-Meteo**(키 불필요)로 같은 좌표를 교차 검증                       |
 
 새 화면은 `/live` **실시간 관측** 한 장이고, 기존 화면들은 데이터 출처만 바뀌었다.
+조회 도시는 서울·수원·부산·제주·강릉에 **판교**(37.4058316, 127.0981535)를 더해 6곳이다.
 
 ```
 src/api/
@@ -1162,8 +1163,8 @@ alert('데이터를 가져오지 못했습니다. API 키 활성화 여부나 �
 
 #### Customization ㊲ 동시 조회 vs 순차 조회 — `axios.all` · `axios.spread` 실측
 
-p.226 표에 `axios.all([...])` 와 `axios.spread(callback)` 이 있지만 예제는 없다. 도시 5곳의
-현재 날씨 + 예보를 가져오려면 요청이 10건 필요해서, 두 방식의 차이가 실제로 드러난다.
+p.226 표에 `axios.all([...])` 와 `axios.spread(callback)` 이 있지만 예제는 없다. 도시 6곳의
+현재 날씨 + 예보를 가져오려면 요청이 12건 필요해서, 두 방식의 차이가 실제로 드러난다.
 
 ```js
 export const fetchAllCities = (cities, config) =>
@@ -1173,13 +1174,13 @@ export const fetchAllCities = (cities, config) =>
 `/live` 에서 측정한 값:
 
 ```
-동시 조회   418ms
-순차 조회  1053ms
-속도 차이   2.5배
+동시 조회   210ms
+순차 조회   623ms
+속도 차이   3.0배
 ```
 
-요청 1건이 200ms 대인데 순차로 돌리면 그게 그대로 더해진다. 도시가 늘수록 격차도 비례해서
-벌어진다. 앱 진입 시 대시보드 동기화는 물론 동시 조회 쪽을 쓴다.
+요청 1건이 100ms 대인데 순차로 돌리면 그게 그대로 더해진다. 도시가 5곳일 때는 2.5배였는데
+6곳으로 늘리자 3.0배가 됐다 — **도시가 늘수록 격차도 같이 벌어진다.** 앱 진입 시 대시보드 동기화는 물론 동시 조회 쪽을 쓴다.
 
 `axios.spread` 는 도시 상세에서 4개 응답을 이름으로 받는 데 썼다.
 
@@ -1399,7 +1400,7 @@ export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(ci
 | `axios.create()`             | `api/http.js`                       | BaseURL·타임아웃을 가진 제공자별 인스턴스       |
 | `interceptors.request`       | `api/http.js`                       | 키·단위·언어 자동 주입, 소요 시간 측정 시작     |
 | `interceptors.response`      | `api/http.js`                       | 통신 기록 적재, 상태 코드 → 안내 문구 표준화    |
-| `axios.all()`                | `openWeather.js` `WeatherLiveView`  | 도시 5곳 병렬 조회 (순차 대비 2.5배)            |
+| `axios.all()`                | `openWeather.js` `WeatherLiveView`  | 도시 6곳 병렬 조회 (순차 대비 3.0배)            |
 | `axios.spread()`             | `openWeather.js` `WeatherLiveView`  | 여러 응답을 이름으로 분해                       |
 | `axios.isCancel()`           | `api/http.js`                       | 취소를 실패와 구분                              |
 | `AbortController` / `signal` | `WeatherLiveView`                   | 이전 요청 취소 — 늦은 응답의 화면 덮어쓰기 방지 |
@@ -1741,7 +1742,7 @@ params: { …, wind_speed_unit: 'ms' }   // 받아올 때부터 단위를 맞춘
 이지 확률이 아니다. 없는 필드를 읽어 `undefined` 가 되고, 화면에는 0% 로 찍혔다.
 
 강수확률은 `/forecast`(3시간 간격 예보)에만 있다. 그래서 도시 1곳당 현재+예보 2건을 함께 받아
-앞으로 24시간 8구간 중 **최댓값**을 대표값으로 쓴다. 요청이 2배가 되므로 5개 도시를 `axios.all`
+앞으로 24시간 8구간 중 **최댓값**을 대표값으로 쓴다. 요청이 2배가 되므로 6개 도시를 `axios.all`
 로 병렬 처리하는 게 이때부터 선택이 아니라 필수가 됐다.
 
 ### 23. 스토어를 옮겼더니 `Cannot access 'weatherStore' before initialization`

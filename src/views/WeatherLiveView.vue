@@ -143,8 +143,9 @@ onMounted(async () => {
     <article class="panel">
       <h2>동시 조회 vs 순차 조회</h2>
       <p class="lead">
-        도시 5곳의 현재 날씨와 예보를 가져오려면 요청이 10건 필요합니다. 한꺼번에 보내는 방식과
-        하나씩 기다리는 방식의 실제 소요 시간을 비교합니다.
+        도시 {{ weatherCities.length }}곳의 현재 날씨와 예보를 가져오려면 요청이
+        {{ weatherCities.length * 2 }}건 필요합니다. 한꺼번에 보내는 방식과 하나씩 기다리는 방식의
+        실제 소요 시간을 비교합니다.
       </p>
       <div class="button-row">
         <button
