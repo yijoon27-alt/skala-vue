@@ -51,15 +51,32 @@ _▲ 메인 대시보드 — 실시간 배지 · 초성 검색 · 온도/습도/
 3. [프로젝트 구조](#프로젝트-구조)
 4. [개인 응용 48건 한눈에 보기](#개인-응용-48건-한눈에-보기)
 5. [단원별 실습 기록](#단원별-실습-기록)
+   - **2일차**
+     - [1. Vue Syntax — Dev Setup (p.69~72)](#1-vue-syntax--dev-setup-p6972)
+     - [2. Vue Syntax — Vue Directive (p.74~93)](#2-vue-syntax--vue-directive-p7493)
+     - [3. Vue Syntax — Vue Event Handling (p.94~105)](#3-vue-syntax--vue-event-handling-p94105)
+     - [4. Vue Syntax — Form Data Binding & Vue Style (p.106~114)](#4-vue-syntax--form-data-binding--vue-style-p106114)
+     - [5. Hands on — Weather Mockup (p.116)](#5-hands-on--weather-mockup-p116)
+     - [6. Composition API (p.117~145)](#6-composition-api-p117145)
 
-   | 일차  | 단원                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-   | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | 2일차 | [1. Vue Syntax — Dev Setup](#1-vue-syntax--dev-setup-p6972) · [2. Vue Syntax — Vue Directive](#2-vue-syntax--vue-directive-p7493) · [3. Vue Syntax — Vue Event Handling](#3-vue-syntax--vue-event-handling-p94105) · [4. Vue Syntax — Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) · [5. Hands on — Weather Mockup](#5-hands-on--weather-mockup-p116) · [6. Composition API](#6-composition-api-p117145)                                                                                       |
-   | 3일차 | [7. Vue Components — Lifecycle](#7-vue-components--lifecycle-p146155) · [8. Vue Components — Props & Emits](#8-vue-components--props--emits-p156172) · [9. Vue Components — Component Slot](#9-vue-components--component-slot-p173177) · [10. Hands on — Weather Component](#10-hands-on--weather-component-p178) · [11. Hands on — Weather Router](#11-hands-on--weather-router-p196197)                                                                                                                                             |
-   | 4일차 | [12. Pinia — Code Challenge](#12-pinia--code-challenge-p199211) · [13. Hands on — Weather Store](#13-hands-on--weather-store-p212) · [14. Axios — Code Challenge](#14-axios--code-challenge-p213229) · [15. Hands on — Weather Axios](#15-hands-on--weather-axios-p230) · [16. UI Library — Code Challenge](#16-ui-library--code-challenge-p246248) · [17. Hands on — Weather UI Library](#17-hands-on--weather-ui-library-p249) · [18. Vite Build & Deployment — Code Challenge](#18-vite-build--deployment--code-challenge-p270273) |
+   - **3일차**
+     - [7. Vue Components — Lifecycle (p.146~155)](#7-vue-components--lifecycle-p146155)
+     - [8. Vue Components — Props & Emits (p.156~172)](#8-vue-components--props--emits-p156172)
+     - [9. Vue Components — Component Slot (p.173~177)](#9-vue-components--component-slot-p173177)
+     - [10. Hands on — Weather Component (p.178)](#10-hands-on--weather-component-p178)
+     - [11. Hands on — Weather Router (p.196~197)](#11-hands-on--weather-router-p196197)
+
+   - **4일차**
+     - [12. Pinia — Code Challenge (p.199~211)](#12-pinia--code-challenge-p199211)
+     - [13. Hands on — Weather Store (p.212)](#13-hands-on--weather-store-p212)
+     - [14. Axios — Code Challenge (p.213~229)](#14-axios--code-challenge-p213229)
+     - [15. Hands on — Weather Axios (p.230)](#15-hands-on--weather-axios-p230)
+     - [16. UI Library — Code Challenge (p.246~248)](#16-ui-library--code-challenge-p246248)
+     - [17. Hands on — Weather UI Library (p.249)](#17-hands-on--weather-ui-library-p249)
+     - [18. Vite Build & Deployment — Code Challenge (p.270~273)](#18-vite-build--deployment--code-challenge-p270273)
 
 6. [적용한 Vue 문법 정리](#적용한-vue-문법-정리)
-7. [트러블슈팅 기록](#트러블슈팅-기록)
+7. [트러블슈팅 기록](#트러블슈팅-기록) — 28건
 8. [4일간의 회고](#4일간의-회고)
 9. [품질 관리](#품질-관리)
 
