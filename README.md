@@ -9,6 +9,62 @@ SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저�
 
 ---
 
+## 무엇을 만들었나
+
+**SKALA Weather** — OpenWeatherMap 실시간 관측값으로 도시 6곳의 날씨를 보여 주고,
+그 숫자를 **출퇴근 · 야외 운동 · 빨래 · 여행** 같은 생활 판단으로 바꿔 주는 Vue 3 SPA입니다.
+교재 4일치 문법(디렉티브 → Composition API → 컴포넌트 → Router → Pinia → Axios → UI Library)을
+하나의 앱으로 이어 붙이면서, 단원마다 개인 응용을 덧붙였습니다.
+
+![날씨 대시보드 — 실시간 관측값과 6개 도시 카드](docs/images/run-home-dashboard.png)
+
+_▲ 메인 대시보드 — 실시간 배지 · 초성 검색 · 온도/습도/강수 게이지 · 즐겨찾기_
+
+| 화면              | 주소                | 핵심                                                      |
+| ----------------- | ------------------- | --------------------------------------------------------- |
+| 날씨 대시보드     | `/`                 | 실시간 6개 도시 · 초성 검색 · 키보드 탐색 · 즐겨찾기 필터 |
+| 도시 상세         | `/weather/:cityId`  | 관측 8종 명세표 · 대기질 · 24시간 예보 타임라인           |
+| **실시간 관측**   | `/live`             | 동시/순차 조회 실측 · 요청 취소 · 교차 검증 · 통신 기록   |
+| 도시 비교         | `/compare`          | 두 도시 관측값 대조 (선택값이 URL 에 남아 그대로 공유)    |
+| 생활 날씨 브리핑  | `/briefing/:cityId` | 활동별 위험도 점수 · 행동 가이드 · 추천 준비물            |
+| 환경설정          | `/settings`         | 단위 전환 · 즐겨찾기 관리 · **설정 변경 이력과 되돌리기** |
+| 실습 아카이브     | `/practice/:topic`  | 교재 실습 컴포넌트 47개를 주제별로 모아 둔 곳             |
+| 서비스 소개 / 404 | `/about` · 그 외    | Router 구조 소개 · Catch-all 안내 화면                    |
+
+**기술 스택** — Vue 3.5 (`<script setup>`) · Vue Router · Pinia · Axios · Element Plus · Vite 8
+
+### 처음 보신다면 여기부터
+
+| 보고 싶은 것              | 가는 곳                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| 개인 응용 48건이 뭔지     | [개인 응용 48건 한눈에 보기](#개인-응용-48건-한눈에-보기) |
+| 어떤 문법을 어디에 썼는지 | [적용한 Vue 문법 정리](#적용한-vue-문법-정리)             |
+| 막힌 것과 해결 과정       | [트러블슈팅 기록 28건](#트러블슈팅-기록)                  |
+| 단원별 진행 내용          | [단원별 실습 기록](#단원별-실습-기록)                     |
+
+---
+
+## 목차
+
+1. [무엇을 만들었나](#무엇을-만들었나)
+2. [실행 방법](#실행-방법)
+3. [프로젝트 구조](#프로젝트-구조)
+4. [개인 응용 48건 한눈에 보기](#개인-응용-48건-한눈에-보기)
+5. [단원별 실습 기록](#단원별-실습-기록)
+
+   | 일차  | 단원                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+   | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | 2일차 | [1. Vue Syntax — Dev Setup](#1-vue-syntax--dev-setup-p6972) · [2. Vue Syntax — Vue Directive](#2-vue-syntax--vue-directive-p7493) · [3. Vue Syntax — Vue Event Handling](#3-vue-syntax--vue-event-handling-p94105) · [4. Vue Syntax — Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) · [5. Hands on — Weather Mockup](#5-hands-on--weather-mockup-p116) · [6. Composition API](#6-composition-api-p117145)                                                                                       |
+   | 3일차 | [7. Vue Components — Lifecycle](#7-vue-components--lifecycle-p146155) · [8. Vue Components — Props & Emits](#8-vue-components--props--emits-p156172) · [9. Vue Components — Component Slot](#9-vue-components--component-slot-p173177) · [10. Hands on — Weather Component](#10-hands-on--weather-component-p178) · [11. Hands on — Weather Router](#11-hands-on--weather-router-p196197)                                                                                                                                             |
+   | 4일차 | [12. Pinia — Code Challenge](#12-pinia--code-challenge-p199211) · [13. Hands on — Weather Store](#13-hands-on--weather-store-p212) · [14. Axios — Code Challenge](#14-axios--code-challenge-p213229) · [15. Hands on — Weather Axios](#15-hands-on--weather-axios-p230) · [16. UI Library — Code Challenge](#16-ui-library--code-challenge-p246248) · [17. Hands on — Weather UI Library](#17-hands-on--weather-ui-library-p249) · [18. Vite Build & Deployment — Code Challenge](#18-vite-build--deployment--code-challenge-p270273) |
+
+6. [적용한 Vue 문법 정리](#적용한-vue-문법-정리)
+7. [트러블슈팅 기록](#트러블슈팅-기록)
+8. [4일간의 회고](#4일간의-회고)
+9. [품질 관리](#품질-관리)
+
+---
+
 ## 실행 방법
 
 ```sh
@@ -76,6 +132,77 @@ src/
 `App.vue`는 상단 메뉴(`TheHeader`)와 페이지 렌더링 영역(`RouterView`)을 배치하는 역할만 하고,
 네비게이션 마크업과 스타일은 `TheHeader.vue`가 가집니다. 날씨 대시보드 · 도시 상세 · 실시간 관측 ·
 도시 비교 · 생활 날씨 브리핑 · 환경설정 · 실습 아카이브 · 서비스 소개 화면을 새로고침 없이 전환합니다.
+
+---
+
+## 개인 응용 48건 한눈에 보기
+
+교재 예제를 그대로 따라 쓴 뒤, **교재가 열어 놓고 닫지 않은 자리**를 찾아 덧붙인 작업입니다.
+아이디어는 대부분 표에만 있고 예제가 없는 기능, 경고만 하고 대책이 없는 설명,
+"범위 제외"로 잘라낸 부분에서 나왔습니다. 상세 구현과 근거는 링크된 단원에 있습니다.
+
+### 2일차 — 19건
+
+| #   | 무엇을 했나                                                                          | 교재의 공백                                 | 단원                                                                                 |
+| --- | ------------------------------------------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------ |
+| ①   | `DOMParser` 기반 `sanitize()` → 정제 전/후 나란히 비교 + 제거 로그 + 페이로드 프리셋 | XSS 위험성만 보여주고 **대책이 없음**       | [Vue Directive](#2-vue-syntax--vue-directive-p7493)                                  |
+| ②   | 검색·정렬·합계(`computed`+`toSorted()`) / `:key="index"` 버그 실물 시연              | `:key` 경고만 하고 **이유를 안 보여줌**     | [Vue Directive](#2-vue-syntax--vue-directive-p7493)                                  |
+| ③   | 주요 이벤트 8종 직접 연결 + 색상 배지 로그 패널                                      | p.94는 표로 8개 나열, 예제는 `@click` 1개뿐 | [Vue Event Handling](#3-vue-syntax--vue-event-handling-p94105)                       |
+| ④   | 좌표 3종 비교 / `target` vs `currentTarget` / `key` vs `code` + 조합키               | p.97은 속성 12개 표, 예제는 3개만 사용      | [Vue Event Handling](#3-vue-syntax--vue-event-handling-p94105)                       |
+| ⑤   | **`.once` 와 `.self` 구현** (alert 대신 화면 로그)                                   | p.101 표엔 수식어 4개, p.102 예제엔 2개만   | [Vue Event Handling](#3-vue-syntax--vue-event-handling-p94105)                       |
+| ⑥   | **한글 IME 조합 가드** — 같은 타이핑에 두 방식이 갈라지는 것을 동시 관측             | p.106은 "v-model = :value + @input"이라고만 | [Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) |
+| ⑦   | `value` 누락 버그 / `true-value` / `select multiple`·객체 / 페이로드 JSON            | p.107 표는 ref 초기값 타입만 다룸           | [Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) |
+| ⑧   | **`.number`는 `Number()`가 아닌 `parseFloat`** — 변환 대조표 11종 + 4가지 함정       | p.110 표는 "Number 타입 자동 형변환" 한 줄  | [Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) |
+| ⑨   | scoped 격리 실물(자식 컴포넌트) + `data-v-` 관측 + `:deep()` + CSS `v-bind()`        | p.113은 설명만, `:deep()`/`v-bind()` 미수록 | [Form Data Binding & Vue Style](#4-vue-syntax--form-data-binding--vue-style-p106114) |
+| ⑩   | **한글 초성 검색**(0xAC00 분해) + 받침 판별 조사 처리 — v-model로는 불가능           | p.116 요구사항 3은 "검색어 출력"까지만      | [Hands on Weather Mockup](#5-hands-on--weather-mockup-p116)                          |
+| ⑪   | 키보드 네비게이션 `.up`/`.down`/`.enter`/`.esc`                                      | p.103~104 수식어 표에 **예제가 아예 없음**  | [Hands on Weather Mockup](#5-hands-on--weather-mockup-p116)                          |
+| ⑫   | 온도 구간 **테이블 + `find()`** (기상청 기준) — 조건문 체인 제거                     | v-else-if 다단계는 VIfSample에 이미 있음    | [Hands on Weather Mockup](#5-hands-on--weather-mockup-p116)                          |
+| ⑬   | 정렬 4종·집계 `computed` + **중첩 `v-for`** 시간대별 막대그래프                      | 교재에 중첩 v-for 형태 없음                 | [Hands on Weather Mockup](#5-hands-on--weather-mockup-p116)                          |
+| ⑭   | `alert` 대신 모달 — `@click.self` 배경 닫기 + `@keydown.esc`                         | 요구사항 4가 alert 고정, UX 대안 없음       | [Hands on Weather Mockup](#5-hands-on--weather-mockup-p116)                          |
+| ⑮   | `onCleanup` 디바운스 조회 — 요청/취소/완료 집계                                      | p.141은 watchEffect 뒷정리를 다루지 않음    | [Composition API](#6-composition-api-p117145)                                        |
+| ⑯   | 쓰기 가능한 `computed({get,set})` — 섭씨↔화씨 `v-model`                              | p.127은 "기본적으로 읽기 전용"에서 끝남     | [Composition API](#6-composition-api-p117145)                                        |
+| ⑰   | 묶음 감시로 중복 조회 차단 (개별 2회 vs 묶음 1회 실측)                               | p.132는 "한꺼번에 감시하는 기법"까지만      | [Composition API](#6-composition-api-p117145)                                        |
+| ⑱   | `deep` + `toRaw`/`structuredClone` 스냅샷 → 즐겨찾기 변경 이력                       | p.134는 "이전 값을 알 수 없다"에서 멈춤     | [Composition API](#6-composition-api-p117145)                                        |
+| ⑲   | `computed` 3단 체인 + 단계별 재계산 계기판                                           | p.128은 캐싱을 콘솔 로그로만 확인           | [Composition API](#6-composition-api-p117145)                                        |
+
+### 3일차 — 10건
+
+| #   | 무엇을 했나                                                                         | 교재의 공백                                             | 단원                                                               |
+| --- | ----------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| ⑳   | 부모 상태 유지 vs 자식 로컬 상태 초기화 + 자식 제거 횟수                            | Hook 흐름을 콘솔로만 확인                               | [Lifecycle](#7-vue-components--lifecycle-p146155)                  |
+| ㉑  | 직접 입력한 동적 Payload 전달 + 빈 값 방지 + 부모 갱신 횟수                         | 고정 문자열 Payload만 전달                              | [Props & Emits](#8-vue-components--props--emits-p156172)           |
+| ㉒  | Named Slot `header`·`footer` + `$slots` 선택 렌더                                   | 공통 카드에 Default Slot 하나만 사용                    | [Hands on Weather Component](#10-hands-on--weather-component-p178) |
+| ㉓  | 즐겨찾기 Props/Emits 왕복 + `WeatherSummary` 추가                                   | 추가 컴포넌트의 구체적 예시가 없음                      | [Hands on Weather Component](#10-hands-on--weather-component-p178) |
+| ㉔  | 초성 검색·키보드 탐색을 Parent 상태 + SearchBar Emits + Card Props로 분리           | 기존 개인 기능을 컴포넌트 구조로 옮기지 않음            | [Hands on Weather Component](#10-hands-on--weather-component-p178) |
+| ㉕  | 상세 모달 독립 컴포넌트 + 포커스·Esc·`@click.self` 닫기                             | `alert` 외 상세 UI가 없음                               | [Hands on Weather Component](#10-hands-on--weather-component-p178) |
+| ㉖  | 두 도시 관측값 비교 + 선택값을 Query String에 `replace()`로 동기화                  | 추가 View의 구체적 기능과 URL 상태 유지 방식은 자유     | [Hands on Weather Router](#11-hands-on--weather-router-p196197)    |
+| ㉗  | 출퇴근·운동·빨래·여행별 위험도·행동 가이드 + `:cityId`/Query URL 복원               | 관측값을 실제 생활 판단으로 연결하는 기능이 없음        | [Hands on Weather Router](#11-hands-on--weather-router-p196197)    |
+| ㉘  | `/practice/:topic` 실습 아카이브 — 레지스트리 + `defineAsyncComponent` 지연 로딩    | 라우터 전환 후 이전 단원 실습의 도달 경로를 다루지 않음 | [Hands on Weather Router](#11-hands-on--weather-router-p196197)    |
+| ㉙  | 상단 메뉴를 단일 인스턴스 컴포넌트로 분리 + `menuItems` `v-for` (`App.vue` 82→26줄) | 요구사항 2가 `App.vue`에 Nav 마크업을 직접 쓰는 형태    | [Hands on Weather Router](#11-hands-on--weather-router-p196197)    |
+
+### 4일차 — 19건
+
+| #   | 무엇을 했나                                                                                               | 교재의 공백                                                            | 단원                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| ㉞  | 구조분해 vs `storeToRefs` vs 직접 접근 3열 대조 — getters도 유실, actions는 무사                          | p.205는 경고 문구와 코드 조각만, 멈추는 화면이 없음                    | [Pinia — Code Challenge](#12-pinia--code-challenge-p199211)          |
+| ㉚  | 절대값 `format` vs 차이값 `formatDelta` 분리 — 비교 화면 4℃가 39℉로 나오던 버그 / 판단 임계값은 섭씨 유지 | p.212가 "Composable로 해결 가능함 **(범위 제외)**"로 명시적으로 잘라냄 | [Hands on Weather Store](#13-hands-on--weather-store-p212)           |
+| ㉛  | 즐겨찾기를 스토어로 승격 — 대시보드·상세·헤더 배지·설정 4곳 공유 + `configStore`와 묶은 필터              | p.199 표가 provide/inject vs Store를 글로만 비교                       | [Hands on Weather Store](#13-hands-on--weather-store-p212)           |
+| ㉜  | `$subscribe` + `$patch` Pinia Plugin — `persist` 옵션 한 줄로 localStorage 자동 영속                      | p.209 authStore는 **액션마다** `setItem` 수동 호출                     | [Hands on Weather Store](#13-hands-on--weather-store-p212)           |
+| ㉝  | `$onAction` 변경 이력(이전→이후) + `$patch` 되돌리기 — 액션이 아니라 이력에 안 쌓임                       | p.199가 "타임트래블·액션 기록"을 주장만 하고 방법 미수록               | [Hands on Weather Store](#13-hands-on--weather-store-p212)           |
+| ㉟  | `axios.create` + 요청/응답 인터셉터 — 키·단위·언어 자동 주입, 소요 시간 측정                              | p.222 표에 인터셉터·BaseURL 을 적어 놓고 예제는 전부 raw `axios.get`   | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊱  | 상태 코드 → 안내 문구 표준화 (401·404·429·5xx·network·timeout·canceled)                                   | p.224 `catch` 가 원인 불문 같은 `alert` 한 줄                          | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊲  | `axios.all`/`spread` 동시 조회 vs 순차 조회 실측 (도시 6곳 210ms vs 623ms, 3.0배)                         | p.226 표에만 있고 예제 없음                                            | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊳  | `AbortController` 로 이전 요청 취소 — 늦은 응답의 화면 덮어쓰기 방지                                      | 교재에 취소 개념 자체가 없음                                           | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊴  | 예보(`pop`)·대기질(`aqi`)을 브리핑 판정 규칙에 연결                                                       | 요구사항 2가 "API 추가"까지만                                          | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊵  | Open-Meteo 교차 검증 (키 불필요) + km/h↔m/s 단위 규약 차이 처리                                           | 요구사항 3의 구체적 활용법 없음                                        | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊶  | 통신 실패·키 없음 시 샘플 데이터 폴백 + 출처 배지                                                         | p.224 는 실패 시 빈 화면 + alert                                       | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊷  | 표시 문자열 대신 `weather[0].id` 분류 코드로 판정                                                         | 실제 `lang=kr` 설명이 수십 종이라 Mock 기준 규칙이 깨짐                | [Hands on Weather Axios](#15-hands-on--weather-axios-p230)           |
+| ㊸  | `el-config-provider` 한국어 언어팩 + 컴포넌트 기본 크기 일괄 지정                                         | p.238 이 표 한 줄만 — 기본 언어가 영어라 확인창이 OK/Cancel            | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
+| ㊹  | `el-skeleton`·`el-alert`·`el-empty` 로 로딩·실패·빈 결과 3종 표시                                         | 교재 Challenge 는 성공 경로만 그린다                                   | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
+| ㊺  | `el-tag` 색을 `condition` 분류 코드·대기질 등급에 매핑                                                    | 표시 문자열로 매칭하면 실제 API 설명 수십 종에 색이 빠짐               | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
+| ㊻  | `el-descriptions`(관측 8종) + `el-timeline`(예보 8구간)                                                   | p.241·242 표에만 있고 예제 없음                                        | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
+| ㊼  | `el-progress` 습도·강수 게이지 — 도시 6곳 스크롤 비교                                                     | 숫자만으로는 도시 간 비교가 안 됨                                      | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
+| ㊽  | `el-statistic` 문자열 제약을 라이브러리 클래스 재사용으로 우회                                            | `value` prop 이 Number/Object 전용, 값 슬롯도 없음                     | [Hands on Weather UI Library](#17-hands-on--weather-ui-library-p249) |
 
 ---
 
@@ -1187,8 +1314,8 @@ export const fetchAllCities = (cities, config) =>
 `/live` 에서 측정한 값:
 
 ```
-동시 조회   210ms
-순차 조회   623ms
+동시 조회   217ms
+순차 조회   658ms
 속도 차이   3.0배
 ```
 
@@ -1296,6 +1423,10 @@ export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(ci
 > 📌 알게 된 점 — 이번 단원에서 손이 제일 많이 간 건 `axios.get` 이 아니라 **그 주변**이었다.
 > 통신 자체는 한 줄인데, 실패·취소·단위·출처 표시가 전부 화면 품질로 이어졌다. 교재가
 > "Axios 는 인터셉터를 지원한다"고 표로만 적어 둔 이유를 붙여 보고 나서야 알았다.
+
+![`/live` — 동시/순차 조회 실측, 교차 검증, 인터셉터가 쌓은 통신 기록](docs/images/run-live.png)
+
+_▲ `/live` 실시간 관측 — 동시 217ms vs 순차 658ms · 대기질 · 교차 검증 · 통신 기록_
 
 > 💭 **회고** — Mock 을 실제 API 로 바꾸는 작업이 단순 치환일 줄 알았는데 아니었다. 값의
 > **모양**(문자열 종류, 없는 필드, 단위)이 달라서, 4일간 쌓아 온 판정 로직이 에러 없이
@@ -1433,6 +1564,10 @@ p.241·p.242 표에만 있고 교재 예제에는 없는 두 컴포넌트를 실
 > 방식만 소개하고 대안을 적지 않았다. 이 프로젝트는 실습 아카이브가 여러 컴포넌트를 쓰고
 > 학습용이라 교재 방식을 유지했지만, 실서비스라면 필요한 컴포넌트만 import 하는 쪽이 맞다.
 > **"편해지는 만큼 무거워진다"** 는 걸 숫자로 확인한 게 이번 단원의 소득이다.
+
+![`/practice/ui` — Element Plus Code Challenge 3종](docs/images/run-ui-library.png)
+
+_▲ `/practice/ui` — 교재 p.246~248 Code Challenge (Input·Switch·InputNumber·Rate·Progress·MessageBox)_
 
 > 💭 **회고** — 3일차에 `BaseDashboardCard` 로 Named Slot 을 직접 만들어 본 게 컸다.
 > `el-card` 의 `#header` / `#footer` 를 처음 봤을 때 "아 그거"로 바로 읽혔다. 라이브러리를
@@ -2180,6 +2315,7 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 | "`.number` 는 Number 타입으로 자동 형변환"       | `Number()` 가 아니라 `parseFloat` 기반 `looseToNumber`     | ⑧    |
 | "`value` 속성 값이 배열에 쌓인다"                | 넣을 때와 되돌릴 때 서로 다른 곳을 본다 (`vModelCheckbox`) | ⑦    |
 | "`scoped` 는 다른 컴포넌트에 영향을 주지 않는다" | 런타임 격리가 아니라 `data-v-` 컴파일 타임 치환            | ⑨    |
+| "숫자에 콤마를 달아 주는 통계 부품"(p.242)       | `value` 가 `[Number, Object]` 전용, 값 슬롯 자체가 없음    | ㊽   |
 
 **문법을 외우는 것보다, 그 문법이 어떻게 구현돼 있는지 한 번 열어 보는 게 훨씬 오래 남았다.**
 
@@ -2194,6 +2330,49 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 - **이미 만든 기능이 불편한 지점** — `alert` 이 화면을 멈춰 세운다 (⑭), 조건문 체인이 길다 (⑫)
 
 마지막 것이 가장 실용적이었다. **내가 방금 쓰면서 불편했던 것**이 가장 확실한 아이디어 출처였다.
+
+### 마지막 날에 배운 것 — 남의 데이터와 남의 코드에 맞추기
+
+3일차까지는 **내가 만든 것 안에서** 문제를 풀었다. 4일차는 성격이 완전히 달랐다.
+바깥에서 들어오는 데이터(OpenWeatherMap)와 남이 만든 코드(Element Plus)에 내 코드를 맞추는 일이었다.
+
+**Mock 을 실제 API 로 바꾸는 건 단순 치환이 아니었다.**
+숫자는 똑같이 들어오는데 **값의 모양**이 달랐고, 그 차이가 전부 조용한 버그로 나타났다.
+
+| 어긋난 것   | 증상                                           | 트러블슈팅 |
+| ----------- | ---------------------------------------------- | ---------- |
+| 문자열 종류 | Mock 은 5종, 실제는 수십 종 → 판정이 그냥 통과 | 19         |
+| 없는 필드   | 현재 날씨 API 에 강수확률이 없음 → 계속 0%     | 22         |
+| 단위 규약   | km/h vs m/s → 풍속이 3.6배로 벌어짐            | 21         |
+| 도착 순서   | 늦게 온 응답이 다른 도시 화면을 덮어씀         | 20         |
+
+넷 다 **에러가 안 났다.** 2일차에 배운 "에러가 안 난다와 정상이다는 다르다"가 그대로 반복됐고,
+이번엔 원인이 내 코드가 아니라 **상대방 규약**이라는 점만 달랐다.
+그래서 표시용 값(`status`)과 판정용 값(`condition`)을 분리하는 식으로,
+바깥 규약이 바뀌어도 내 로직이 안 흔들리게 경계를 긋는 방법을 배웠다.
+
+**통신 자체는 한 줄인데, 화면 품질은 그 주변에서 갈렸다.**
+`axios.get` 은 정말 한 줄이다. 정작 손이 많이 간 건 실패 원인 구분(401/404/429/오프라인),
+취소, 단위, 데이터 출처 표시였다. 교재 p.222 가 "Axios 는 인터셉터를 지원한다"를
+표로만 적어 둔 이유를, 직접 붙여 보고 나서야 알았다.
+
+**UI 라이브러리는 문법을 건너뛰는 도구가 아니었다.**
+`el-card` 의 `#header` / `#footer` 를 처음 봤을 때 바로 읽혔다 —
+3일차에 `BaseDashboardCard` 로 Named Slot 을 손으로 만들어 봤기 때문이다.
+**직접 만들어 본 구조를 알아보는 일**에 가까웠다.
+반대로 `el-statistic` 에 문자열을 넣었다가 막혔을 때는, 결국 라이브러리 소스를 열어
+`value` 의 타입이 `[Number, Object]` 이고 값 슬롯이 없다는 걸 확인해야 넘어갈 수 있었다(트러블슈팅 26).
+**쓰는 법만 알면 되는 줄 알았는데, 안 되는 순간엔 결국 안을 봐야 했다.**
+
+**편해지는 만큼 무거워진다는 걸 숫자로 봤다.**
+
+```
+Element Plus 도입 전   366.5 kB
+도입 후              1624.8 kB   (4.4배, 그중 CSS 366 kB)
+```
+
+교재 p.236 은 전역 등록만 소개하고 이 비용을 적지 않았다. 학습용이라 그대로 뒀지만,
+**"왜 실무에서는 필요한 것만 import 하는가"** 를 처음으로 납득했다.
 
 ### 남은 과제
 
