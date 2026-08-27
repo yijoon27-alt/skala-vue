@@ -1,0 +1,61 @@
+# 교재 p.250~274 — Vite Build & Deployment (GitHub Pages)
+# main 브랜치에 push 될 때마다 자동으로 빌드 → 배포한다.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포가 겹치면 뒤쪽 것만 남긴다 (진행 중인 배포는 취소하지 않는다)
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 정적 분석 (교재 p.274 — 에러 0 확인)
+        run: npx eslint .
+
+      - name: 프로덕션 빌드
+        # API 키는 저장소에 커밋하지 않고 GitHub Secret 으로 주입한다.
+        # Secret 이 없으면 앱이 샘플 데이터로 동작한다 (weatherStore 폴백).
+        env:
+          VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
+        run: npm run build
+
+      - name: Pages 설정 (없으면 활성화까지 함께 처리)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -21,29 +21,43 @@ const handleRegister = () => {
 </script>
 
 <template>
-  <el-card shadow="hover" style="max-width: 420px">
+  <el-card class="register-card" shadow="hover">
     <template #header>
-      <strong>회원가입</strong>
+      <strong>📝 실습 1. 회원가입 Form &amp; 인풋 제어</strong>
     </template>
 
-    <el-input v-model="userForm.email" placeholder="이메일 주소" clearable />
-
-    <div class="agree-row">
-      <span>이용약관 동의</span>
-      <el-switch v-model="userForm.agree" />
+    <div class="field">
+      <label for="register-email">이메일 주소:</label>
+      <el-input id="register-email" v-model="userForm.email" placeholder="example@email.com" />
     </div>
 
-    <template #footer>
-      <el-button type="primary" @click="handleRegister">회원가입</el-button>
-    </template>
+    <div class="field">
+      <el-switch v-model="userForm.agree" />
+      <span>개인정보 수집 및 필수 이용약관에 동의합니다.</span>
+    </div>
+
+    <el-button type="success" class="submit" @click="handleRegister">🎁 회원가입하기</el-button>
   </el-card>
 </template>
 
 <style scoped>
-.agree-row {
+.register-card {
+  max-width: 460px;
+}
+
+.field {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  flex-shrink: 0;
+  color: #606266;
+}
+
+.submit {
+  width: 100%;
 }
 </style>

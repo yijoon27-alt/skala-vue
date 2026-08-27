@@ -5,7 +5,7 @@ SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저�
 
 - 교육생: 허이준
 - 원본 소스: [bottletiger/skala-vue](https://github.com/bottletiger/skala-vue)
-- 배포 주소: _(추후 등록)_
+- 배포 주소: **https://yijoon27-alt.github.io/skala-vue/** (GitHub Pages, `main` push 시 자동 배포)
 
 ---
 
@@ -78,7 +78,8 @@ _▲ 메인 대시보드 — 실시간 배지 · 초성 검색 · 온도/습도/
 6. [적용한 Vue 문법 정리](#적용한-vue-문법-정리)
 7. [트러블슈팅 기록](#트러블슈팅-기록) — 28건
 8. [4일간의 회고](#4일간의-회고)
-9. [품질 관리](#품질-관리)
+9. [배포 (p.250~274)](#배포-교재-p250274)
+10. [품질 관리](#품질-관리)
 
 ---
 
@@ -2391,19 +2392,67 @@ Element Plus 도입 전   366.5 kB
 교재 p.236 은 전역 등록만 소개하고 이 비용을 적지 않았다. 학습용이라 그대로 뒀지만,
 **"왜 실무에서는 필요한 것만 import 하는가"** 를 처음으로 납득했다.
 
-### 남은 과제
+## 배포 (교재 p.250~274)
 
-| 항목                    | 상태                                                    |
-| ----------------------- | ------------------------------------------------------- |
-| Axios (교재 p.213~230)  | ✅ 완료 — 키는 `.env` 로 분리, 실패 시 샘플 데이터 폴백 |
-| UI Library (p.231~249)  | ✅ 완료 — Element Plus 를 대시보드·상세 화면에 적용     |
-| 빌드 · 배포 (p.250~274) | Code Challenge(p.270~273) ✅ / **배포만 남음**          |
+**https://yijoon27-alt.github.io/skala-vue/**
 
-배포 시 호스팅(Vercel / Netlify / GitHub Pages)의 환경 변수 설정에
-`VITE_OPENWEATHER_API_KEY` 를 등록해야 실시간 데이터가 뜬다. 등록하지 않아도 앱은
-샘플 데이터로 동작하지만 배지가 `샘플 데이터` 로 남는다.
+호스팅은 **GitHub Pages** 를 골랐다. 소스 저장소가 이미 GitHub Public 이라
+별도 서비스에 가입하지 않고 저장소 하나로 소스·배포를 함께 제출할 수 있다.
 
-배포까지 마치면 위쪽 **배포 주소** 칸을 채운다.
+`.github/workflows/deploy.yml` 이 `main` 브랜치 push 마다
+`npm ci` → `npx eslint .` → `npm run build` → Pages 배포까지 자동으로 돌린다.
+**린트가 깨지면 배포도 멈춘다** — 교재 p.274 의 "ESLint 에러 0" 요건을 사람이 아니라 CI 가 지킨다.
+
+| 항목        | 상태                                                      |
+| ----------- | --------------------------------------------------------- |
+| 소스코드    | ✅ GitHub Public 저장소                                   |
+| 배포 결과   | ✅ GitHub Pages (Actions 자동 배포)                       |
+| Axios       | ✅ p.213~230 — 키는 `.env` 분리, 실패 시 샘플 데이터 폴백 |
+| UI Library  | ✅ p.231~249 — Element Plus                               |
+| 빌드 · 배포 | ✅ p.250~274 — Code Challenge 4종 + 실제 배포             |
+
+### 배포하면서 부딪힌 것 3가지
+
+**1. asset 경로에 저장소 이름이 붙어야 한다**
+
+GitHub Pages 는 `https://<user>.github.io/<repo>/` 하위에서 서비스된다.
+`base` 를 그대로 두면 빌드된 HTML 이 `/assets/index.js` 를 찾아가 **흰 화면**이 된다.
+
+```js
+// vite.config.js — 개발 서버는 '/' 그대로 두고 빌드 때만 붙인다
+base: command === 'build' ? '/skala-vue/' : '/',
+```
+
+`base` 를 항상 `/skala-vue/` 로 두면 `npm run dev` 주소까지 바뀌어 버려
+교재 p.197 의 `localhost:3000/` 과 어긋난다. 그래서 `command` 로 갈랐다.
+
+**2. History Mode + 정적 호스팅 = 새로고침 404**
+
+`/weather/city_06` 은 서버에 실제로 존재하는 파일이 아니다.
+링크를 눌러 들어가면 라우터가 처리하지만, **그 주소에서 새로고침하면 서버가 404** 를 낸다.
+GitHub Pages 는 없는 경로에 `404.html` 을 돌려주므로, 빌드 후 `index.html` 을 복사해
+같은 SPA 를 태워 보내면 라우터가 이어받는다.
+
+```json
+"postbuild": "node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\""
+```
+
+Vercel 은 `vercel.json` rewrite, Netlify 는 `_redirects` 로 같은 일을 한다.
+**호스팅마다 이름만 다르고 하는 일은 똑같다** — 없는 경로를 SPA 진입점으로 되돌리는 것.
+
+**3. API 키를 CI 에 넘기는 방법**
+
+`.env` 는 커밋하지 않으므로 CI 에는 키가 없다. GitHub Actions Secret 으로 주입한다.
+
+```yaml
+env:
+  VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
+```
+
+Secret 을 등록하지 않아도 배포는 성공하고, 앱은 `weatherStore` 폴백 덕에
+샘플 데이터로 동작하며 출처 배지만 `샘플 데이터` 로 남는다.
+다만 아래 「품질 관리」에 적었듯 **Secret 을 써도 빌드 산출물에는 키가 평문으로 박힌다.**
+Secret 이 막아 주는 것은 저장소 유출이지 브라우저 노출이 아니다.
 
 ## 품질 관리
 
