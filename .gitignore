@@ -42,6 +42,9 @@ __screenshots__/
 .env
 .env.*
 !.env.example
+# 아래 둘은 API 키가 아니라 빌드 모드별 API 주소만 담는다 (교재 p.272)
+!.env.staging
+!.env.production
 
 # Claude Code 작업 컨텍스트 (로컬 전용 - 제출 저장소에 올리지 않음)
 CLAUDE.md

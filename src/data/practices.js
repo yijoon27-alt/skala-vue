@@ -285,6 +285,18 @@ export const practiceGroups = [
     ],
   },
   {
+    id: 'build',
+    title: 'Build & Deployment',
+    summary: '빌드 모드별 환경 변수 주입 확인',
+    items: [
+      {
+        name: 'BuildEnvSample',
+        label: '환경 변수 — import.meta.env',
+        component: () => import('@/components/practices/build/BuildEnvSample.vue'),
+      },
+    ],
+  },
+  {
     id: 'handson',
     title: '종합 과제',
     summary: '날씨 대시보드를 문법 → Composition API → 컴포넌트 구조로 발전시킨 기록',

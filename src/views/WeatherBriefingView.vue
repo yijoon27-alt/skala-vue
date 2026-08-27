@@ -157,7 +157,7 @@ const activityRules = {
 const cityData = computed(() => {
   const city = weatherStore.findCity(String(route.params.cityId))
   if (!city) return null
-  return { ...city, ...(weatherStore.findAir(city.id) ?? {}) }
+  return { ...city, ...weatherStore.findAir(city.id) }
 })
 
 watch(

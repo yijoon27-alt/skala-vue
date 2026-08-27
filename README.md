@@ -15,8 +15,10 @@ SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저�
 npm install            # 의존성 설치
 cp .env.example .env   # OpenWeatherMap API 키 입력 (없어도 샘플 데이터로 동작)
 npm run dev            # 개발 서버 실행 (localhost:3000)
-npm run build          # 프로덕션 빌드
-npm run lint           # ESLint 검사
+npm run build          # 프로덕션 빌드 (기본 모드 = production)
+npm run build:staging  # 검증 서버용 빌드 (.env.staging 로드)
+npm run lint           # ESLint + Oxlint 검사 (--fix 포함)
+npm run format         # Prettier 일괄 정렬
 ```
 
 > `.env` 는 `.gitignore` 로 커밋에서 제외됩니다. 키를 넣지 않으면 실시간 통신 대신
@@ -42,6 +44,7 @@ src/
 │     ├─ library/             # Pinia (p.199~211)
 │     ├─ axios/               # Axios (p.224~228)
 │     ├─ ui/                  # UI Library — Element Plus (p.246~248)
+│     ├─ build/               # Build & Deployment — 환경 변수 (p.272)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
 ├─ api/
@@ -1429,6 +1432,114 @@ p.241·p.242 표에만 있고 교재 예제에는 없는 두 컴포넌트를 실
 > 반대로 `el-statistic` 처럼 안을 모르면 못 넘는 벽도 있었다 — prop 타입 하나 때문에
 > 멀쩡해 보이는 코드가 경고를 뿜었고, 결국 라이브러리 소스를 열어 슬롯이 없다는 걸 확인해야 했다.
 
+---
+
+### 18. Vite Build & Deployment — Code Challenge (p.270~273)
+
+미션 4개를 순서대로 수행하고 **터미널에서 관측된 결과**를 그대로 남긴다.
+
+#### p.270 ESLint Custom 규칙
+
+`eslint.config.js` 의 `skipFormatting` 바로 앞에 규칙 묶음을 넣었다. 배열은 아래쪽일수록
+앞선 규칙을 덮어쓰기 때문에 위치가 중요하다.
+
+```js
+{
+  name: 'app/custom-rules',
+  rules: {
+    eqeqeq: ['error', 'always'],  // 느슨한 비교(==) 금지
+    'no-console': 'off',          // console.log 허용
+  },
+},
+skipFormatting,
+```
+
+`SampleOne.vue` 에 일부러 느슨한 비교를 넣고 검사했다.
+
+```js
+const userAge = 20
+if (userAge == 20) {
+  console.log('스무 살입니다')
+}
+```
+
+```
+src/components/practices/basic/SampleOne.vue
+  8:13  error  Expected '===' and instead saw '=='  eqeqeq
+✖ 1 problem (1 error, 0 warnings)
+ERROR: "lint:eslint" exited with 1.
+```
+
+같은 블록의 `console.log` 는 **아무 경고도 나지 않았다** — `no-console: 'off'` 가 함께 걸린 것도
+이 한 번의 실행으로 확인된다. 확인 후 `git checkout` 으로 되돌렸다.
+
+#### p.271 Prettier 포맷팅
+
+교재가 준 정렬이 엉망인 코드를 그대로 타이핑하고 `npm run format` 을 돌렸다.
+
+```js
+// 실행 전
+const myRegion = `Suwon`
+const regionGreeting = `웰컴 투 ${myRegion}`
+
+// 실행 후
+const myRegion = `Suwon`
+const regionGreeting = `웰컴 투 ${myRegion}`
+```
+
+불필요한 공백과 세미콜론(`semi: false`)은 정리됐지만 **백틱은 그대로 남았다**(트러블슈팅 27).
+교재는 "백틱 기호와 공백이 어떻게 자동 변환되었는지 확인한다" 고 적었지만, Prettier 는
+백틱을 따옴표로 바꾸지 않는다.
+
+#### p.272 빌드 모드별 환경 변수
+
+`.env.staging` · `.env.production` 을 만들고 `package.json` 에 스크립트를 등록했다.
+
+```json
+"build:staging": "vite build --mode staging",
+"build:production": "vite build --mode production"
+```
+
+`npm run build:staging` 첫 줄에 모드가 찍힌다.
+
+```
+vite v8.2.2 building client environment for staging...
+```
+
+산출물을 직접 뒤져 **값이 실제로 치환됐는지**까지 확인했다.
+
+| 명령                       | 첫 줄 모드    | 번들에 박힌 `VITE_API_URL`  |
+| -------------------------- | ------------- | --------------------------- |
+| `npm run build:staging`    | `staging`     | `api-stage.skcc.com`        |
+| `npm run build:production` | `production`  | `api-prod.skcc.com`         |
+| `npm run build`            | `production`  | `api-prod.skcc.com`         |
+| `npm run dev`              | `development` | 없음 → 화면에 `(설정 없음)` |
+
+여기서 교재에 없는 두 가지를 알았다.
+
+- **`vite build` 의 기본 모드가 이미 `production`** 이다. 그래서 `--mode` 를 안 붙여도
+  `.env.production` 이 자동으로 읽힌다. 모드별 파일을 만들면 기본 빌드의 동작도 같이 바뀐다.
+- **개발 서버(`npm run dev`)는 `development` 모드**라 두 파일 모두 읽지 않는다. 화면에
+  `(설정 없음)` 이 뜨는 게 정상이고, 이걸 버그로 오해하기 쉽다.
+
+#### p.273 빌드 산출물
+
+```
+dist/
+├─ index.html
+├─ favicon.ico
+└─ assets/   (110개 파일, 1.9MB)
+     index-CLWQ_EjH.js      ← 해시가 붙은 진입 번들
+     index-DRRQi8ak.css
+     BuildEnvSample-CqbtTOtG.js
+```
+
+- `dist` 안에 **`.vue` 파일은 0개** — 브라우저가 바로 읽는 html·js·css 만 남는다.
+- 파일명 뒤 해시는 내용이 바뀌면 같이 바뀐다. 실제로 Element Plus 를 넣기 전후로
+  진입 번들이 `index-CdvCB20f.js` → `index-CLWQ_EjH.js` 로 바뀌는 걸 확인했다.
+  브라우저가 옛날 파일을 캐시해서 화면이 안 바뀌는 문제를 막아 준다.
+- `dist` 는 `.gitignore` 에 있어 커밋하지 않는다. 배포 때 호스팅에 올리는 완제품이다.
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -1979,6 +2090,51 @@ value: { type: definePropType([Number, Object]), default: 0 }
 > UI 라이브러리는 태그만 바꿔 끼우면 되는 것 같아도, 안 되는 케이스는 결국 prop 타입과
 > 슬롯 정의를 직접 확인해야 한다.
 
+### 27. Prettier 가 백틱을 따옴표로 안 바꾼다
+
+교재 p.271 미션은 "백틱(`) 기호와 공백이 어떻게 자동 변환되었는지 확인한다" 인데,
+`npm run format` 을 돌려도 백틱이 그대로 남았다.
+
+```js
+const myRegion = `Suwon` //  ← 보간이 없는데도 백틱 유지
+```
+
+`.prettierrc.json` 의 `"singleQuote": true` 는 **`'` 와 `"` 중에서만 고른다.**
+템플릿 리터럴(백틱)은 대상이 아니다. Prettier 가 백틱을 따옴표로 바꾸면 줄바꿈이나
+`${}` 처리가 달라질 수 있어서 **의도적으로 건드리지 않는 설계**다.
+
+실제로 바뀐 것은 공백(`const     myRegion` → `const myRegion`)과 세미콜론(`semi: false`)
+두 가지였다. 미션의 관측 포인트는 "백틱이 안 바뀐다" 쪽이 정확하다.
+
+### 28. `npm run lint` 를 돌렸더니 소스 파일이 수정돼 있었다
+
+린트는 검사만 하는 줄 알고 돌렸는데, 끝나고 `git status` 에 건드리지 않은 파일이 떠 있었다.
+
+```
+ M src/views/WeatherBriefingView.vue
+```
+
+`package.json` 의 스크립트에 `--fix` 가 붙어 있어서다.
+
+```json
+"lint:oxlint": "oxlint . --fix",
+"lint:eslint": "eslint . --fix --cache"
+```
+
+`oxlint` 가 자동으로 고친 내용은 이랬다.
+
+```js
+- return { ...city, ...(weatherStore.findAir(city.id) ?? {}) }
++ return { ...city, ...weatherStore.findAir(city.id) }
+```
+
+객체 리터럴에서 `null`·`undefined` 를 펼치면 아무 속성도 안 생긴다(`{...null}` → `{}`).
+그래서 `?? {}` 가 실제로 불필요했고, 수정이 맞았다. `node -e` 로 직접 확인하고 받아들였다.
+
+> 📌 알게 된 점 — **자동 수정이 붙은 린트는 커밋 직전에 돌리고 `git diff` 를 봐야 한다.**
+> 이번엔 옳은 수정이었지만, 검사만 하고 싶을 때는 `npx eslint .` 처럼 `--fix` 없이 부르는 게 맞다.
+> p.270 미션의 `==` 검출도 이 방식으로 확인했다 (eqeqeq 는 자동 수정 대상이 아니라 둘 다 걸린다).
+
 ## 4일간의 회고
 
 ### 가장 오래 막혔던 것 — 에러가 안 나는 버그
@@ -2055,5 +2211,19 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 | 전체 SFC 컴파일 | `vue/compiler-sfc` 로 `src/**/*.vue` 파싱 → 스크립트 → 템플릿 컴파일 |
 | 브라우저 동작   | `npm run dev` 후 컴포넌트별 육안 확인 (콘솔 에러 0)                  |
 | 전역 상태       | Vue DevTools → Pinia 탭에서 `counter` · `config` · `favorite` 확인   |
+| 코드 스타일     | `npx prettier --check src/ README.md`                                |
+| 빌드 산출물     | `npm run build` → `dist/` 생성 확인                                  |
 
-> ⚠️ API 키 등 민감 정보는 `.env` 로 분리한다. `.gitignore` 에 `.env`, `.env.*` 를 등록해 두었다.
+> ⚠️ **API 키는 `.env` 에만 둔다.** `.gitignore` 에 `.env`, `.env.*` 를 등록했고,
+> 키를 담지 않는 `.env.example` · `.env.staging` · `.env.production` 만 예외로 커밋한다.
+>
+> 다만 **프런트엔드로 내려간 키는 감춰지지 않는다.** 빌드 산출물을 뒤져 보면 그대로 보인다.
+>
+> ```sh
+> grep -l "<발급받은 키>" dist/assets/*.js
+> # dist/assets/weatherStore-*.js
+> ```
+>
+> `.env` 는 **저장소 유출**을 막는 장치이지 **브라우저 노출**을 막는 장치가 아니다.
+> 실서비스라면 키를 들고 있는 백엔드 프록시를 두고 프런트는 그 서버만 호출해야 한다.
+> 이 과제는 무료 요금제(분당 60회) 조회 전용 키라 그대로 두되, 노출된다는 사실은 명시해 둔다.
