@@ -1,21 +1,22 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { findWeatherCity, weatherCities } from '@/data/weather'
+import { useWeatherStore } from '@/stores/weatherStore'
 import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
+const weatherStore = useWeatherStore()
 const { format, formatDelta } = useTemperature()
 
 const validCityId = (value, fallback) =>
-  typeof value === 'string' && findWeatherCity(value) ? value : fallback
+  typeof value === 'string' && weatherStore.findCity(value) ? value : fallback
 
 const leftCityId = ref(validCityId(route.query.left, 'city_01'))
 const rightCityId = ref(validCityId(route.query.right, 'city_02'))
 
-const leftCity = computed(() => findWeatherCity(leftCityId.value))
-const rightCity = computed(() => findWeatherCity(rightCityId.value))
+const leftCity = computed(() => weatherStore.findCity(leftCityId.value))
+const rightCity = computed(() => weatherStore.findCity(rightCityId.value))
 // 기온 "차이" 는 formatDelta 로 표시한다. 교재 p.212 샘플의 절대 온도 변환식(+32)을
 // 그대로 쓰면 4℃ 차이가 화씨에서 39℉ 로 나온다 (정답은 7.2℉).
 const temperatureGap = computed(() => Math.abs(leftCity.value.temp - rightCity.value.temp))
@@ -50,7 +51,7 @@ const swapCities = () => {
       <label>
         첫 번째 도시
         <select v-model="leftCityId">
-          <option v-for="city in weatherCities" :key="city.id" :value="city.id">
+          <option v-for="city in weatherStore.cities" :key="city.id" :value="city.id">
             {{ city.name }}
           </option>
         </select>
@@ -58,7 +59,7 @@ const swapCities = () => {
       <label>
         두 번째 도시
         <select v-model="rightCityId">
-          <option v-for="city in weatherCities" :key="city.id" :value="city.id">
+          <option v-for="city in weatherStore.cities" :key="city.id" :value="city.id">
             {{ city.name }}
           </option>
         </select>

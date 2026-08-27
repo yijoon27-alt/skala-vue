@@ -5,15 +5,17 @@ import BaseDashboardCard from '@/components/practices/handson/weather-component/
 import SearchBar from '@/components/practices/handson/weather-component/SearchBar.vue'
 import WeatherCard from '@/components/practices/handson/weather-component/WeatherCard.vue'
 import WeatherSummary from '@/components/practices/handson/weather-component/WeatherSummary.vue'
-import { weatherCities } from '@/data/weather'
 import { hangulMatch, withParticle } from '@/utils/hangul'
 import { useConfigStore } from '@/stores/configStore'
 import { useFavoriteStore } from '@/stores/favoriteStore'
+import { useWeatherStore } from '@/stores/weatherStore'
 
 const route = useRoute()
 const router = useRouter()
 const configStore = useConfigStore()
 const favoriteStore = useFavoriteStore()
+// 실시간 관측값(실패 시 샘플 값)을 한곳에서 받는다
+const weatherStore = useWeatherStore()
 
 const searchQuery = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 도시를 검색해 보세요.')
@@ -40,9 +42,8 @@ watch(searchQuery, (newQuery) => {
 
 const filteredWeatherList = computed(() => {
   const query = searchQuery.value.trim()
-  const searched = query
-    ? weatherCities.filter((city) => hangulMatch(city.name, query))
-    : weatherCities
+  const source = weatherStore.cities
+  const searched = query ? source.filter((city) => hangulMatch(city.name, query)) : source
   // configStore(필터 설정) + favoriteStore(즐겨찾기 목록) 두 스토어가 여기서 합쳐진다
   if (!configStore.favoritesOnly) return searched
   return searched.filter((city) => favoriteStore.isFavorite(city.id))
@@ -107,6 +108,9 @@ const handleDetailJump = (city) => {
         <h1>지역별 날씨</h1>
       </div>
       <div class="page-actions">
+        <span :class="['source-badge', weatherStore.isLive ? 'on' : 'off']">
+          {{ weatherStore.sourceLabel }}
+        </span>
         <RouterLink
           :to="{
             name: 'WeatherBriefing',
@@ -116,6 +120,7 @@ const handleDetailJump = (city) => {
         >
           생활 날씨 브리핑
         </RouterLink>
+        <RouterLink :to="{ name: 'WeatherLive' }">실시간 관측</RouterLink>
         <RouterLink :to="{ name: 'WeatherCompare' }">도시 비교하기 →</RouterLink>
       </div>
     </header>
@@ -180,7 +185,9 @@ const handleDetailJump = (city) => {
 
     <section class="feature-summary">
       <h2>✅ 기본 기능</h2>
-      <p>RouterView 페이지 렌더링 · 동적 상세 경로 · Programmatic Navigation</p>
+      <p>
+        RouterView 페이지 렌더링 · 동적 상세 경로 · Programmatic Navigation · 실시간 날씨 API 연동
+      </p>
       <h2>✨ 추가 기능</h2>
       <p>
         초성 검색 · 키보드 탐색 · URL 상태 복원 · 두 도시 비교 · 목적별 생활 날씨 브리핑 · 온도 단위
@@ -214,6 +221,24 @@ const handleDetailJump = (city) => {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.source-badge {
+  align-self: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.source-badge.on {
+  background: #e5f7ee;
+  color: #1e8449;
+}
+
+.source-badge.off {
+  background: #fdf0e3;
+  color: #b7791f;
 }
 
 .eyebrow {

@@ -1,11 +1,13 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { findWeatherCity, weatherCities } from '@/data/weather'
+import { isRainy } from '@/data/weather'
+import { useWeatherStore } from '@/stores/weatherStore'
 import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
+const weatherStore = useWeatherStore()
 
 // 판단 임계값(체감 31℃ / 5℃ 등)은 원본 섭씨로 두고, 화면 문구에 찍히는 숫자만 변환한다
 const { format } = useTemperature()
@@ -88,6 +90,13 @@ const activityRules = {
         `강수확률 ${city.precipitation}%로 노면이 미끄럽고 시야가 나빠질 수 있습니다.`,
     },
     {
+      points: 2,
+      test: (city) => (city.aqi ?? 0) >= 4,
+      title: '대기질이 나쁩니다.',
+      detail: (city) =>
+        `대기질 ${city.aqiLabel} 단계(미세먼지 ${city.pm10}㎍/㎥)로 실내 운동이 낫습니다.`,
+    },
+    {
       points: 1,
       test: (city) => city.wind >= 7,
       title: '바람의 영향을 확인하세요.',
@@ -109,7 +118,7 @@ const activityRules = {
     },
     {
       points: 1,
-      test: (city) => ['비', '소나기'].includes(city.status),
+      test: isRainy,
       title: '현재 강수 상태입니다.',
       detail: (city) => `현재 날씨가 ${city.status}이므로 실외 건조는 피하세요.`,
     },
@@ -136,7 +145,7 @@ const activityRules = {
     },
     {
       points: 1,
-      test: (city) => ['비', '소나기'].includes(city.status),
+      test: isRainy,
       title: '우천 대체 코스를 확인하세요.',
       detail: (city) =>
         `현재 ${city.status} 상태라 이동 시간과 실내 관광지를 함께 확인하는 편이 좋습니다.`,
@@ -144,7 +153,18 @@ const activityRules = {
   ],
 }
 
-const cityData = computed(() => findWeatherCity(String(route.params.cityId)))
+// 관측값(실시간/샘플)과 대기질을 한 객체로 합쳐 판정 규칙이 한 곳만 보게 한다
+const cityData = computed(() => {
+  const city = weatherStore.findCity(String(route.params.cityId))
+  if (!city) return null
+  return { ...city, ...(weatherStore.findAir(city.id) ?? {}) }
+})
+
+watch(
+  () => route.params.cityId,
+  (cityId) => weatherStore.loadAir(String(cityId)),
+  { immediate: true },
+)
 
 const activityId = computed({
   get: () => {
@@ -238,7 +258,7 @@ const changeCity = (event) => {
       <label>
         도시 변경
         <select :value="cityData.id" @change="changeCity">
-          <option v-for="city in weatherCities" :key="city.id" :value="city.id">
+          <option v-for="city in weatherStore.cities" :key="city.id" :value="city.id">
             {{ city.name }}
           </option>
         </select>
@@ -311,7 +331,8 @@ const changeCity = (event) => {
       </RouterLink>
     </footer>
     <small class="disclaimer">
-      이 브리핑은 실습용 Mock Data로 생성한 생활 판단 보조 정보이며 공식 기상특보가 아닙니다.
+      이 브리핑은 {{ cityData.source === 'live' ? '실시간 관측값' : '샘플 값' }}으로 계산한 생활
+      판단 보조 정보이며 공식 기상특보가 아닙니다.
     </small>
   </section>
 

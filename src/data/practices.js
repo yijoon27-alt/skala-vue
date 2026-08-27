@@ -246,6 +246,23 @@ export const practiceGroups = [
     ],
   },
   {
+    id: 'axios',
+    title: 'Axios',
+    summary: 'REST API 통신 — OpenWeather 호출 · JSON Placeholder CRUD',
+    items: [
+      {
+        name: 'AxiosWeather',
+        label: 'Axios 기본 통신 — OpenWeather',
+        component: () => import('@/components/practices/axios/AxiosWeather.vue'),
+      },
+      {
+        name: 'AxiosJson',
+        label: 'REST CRUD — GET · POST · PUT · DELETE',
+        component: () => import('@/components/practices/axios/AxiosJson.vue'),
+      },
+    ],
+  },
+  {
     id: 'handson',
     title: '종합 과제',
     summary: '날씨 대시보드를 문법 → Composition API → 컴포넌트 구조로 발전시킨 기록',

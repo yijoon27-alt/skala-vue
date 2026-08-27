@@ -6,6 +6,7 @@ const favoriteStore = useFavoriteStore()
 
 const menuItems = [
   { routeName: 'WeatherHome', label: '날씨 대시보드' },
+  { routeName: 'WeatherLive', label: '실시간 관측' },
   { routeName: 'WeatherCompare', label: '도시 비교' },
   { routeName: 'PracticeIndex', label: '실습 모음' },
   { routeName: 'WeatherAbout', label: '서비스 소개' },

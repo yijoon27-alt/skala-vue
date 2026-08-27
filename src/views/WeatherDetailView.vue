@@ -1,16 +1,27 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { findWeatherCity } from '@/data/weather'
 import { useFavoriteStore } from '@/stores/favoriteStore'
+import { useWeatherStore } from '@/stores/weatherStore'
 import { useTemperature } from '@/composables/useTemperature'
 
 const route = useRoute()
 const router = useRouter()
 const favoriteStore = useFavoriteStore()
+const weatherStore = useWeatherStore()
 const { format } = useTemperature()
 
-const cityData = computed(() => findWeatherCity(String(route.params.cityId)))
+const cityData = computed(() => weatherStore.findCity(String(route.params.cityId)))
+// 대기질은 좌표가 같아도 엔드포인트가 달라 따로 받아온다 (상세 화면에서만 필요)
+const airData = computed(() => weatherStore.findAir(String(route.params.cityId)))
+
+watch(
+  () => route.params.cityId,
+  (cityId) => weatherStore.loadAir(String(cityId)),
+  {
+    immediate: true,
+  },
+)
 
 const goDashboard = () => {
   router.push({ name: 'WeatherHome' })
@@ -23,6 +34,12 @@ const goDashboard = () => {
       <p class="eyebrow">OBSERVATION {{ cityData.observedAt }}</p>
       <h1>{{ cityData.fullName }}</h1>
       <p class="weather-status">{{ cityData.status }} · {{ format(cityData.temp) }}</p>
+      <p class="source-line">
+        {{ cityData.source === 'live' ? '실시간 관측값' : '샘플 값' }}
+        <span v-if="airData">
+          · 대기질 {{ airData.aqiLabel }} (미세먼지 {{ airData.pm10 }}㎍/㎥)</span
+        >
+      </p>
 
       <dl class="observation-grid">
         <div>
@@ -40,6 +57,10 @@ const goDashboard = () => {
         <div>
           <dt>강수 확률</dt>
           <dd>{{ cityData.precipitation }}%</dd>
+        </div>
+        <div v-if="airData">
+          <dt>초미세먼지</dt>
+          <dd>{{ airData.pm25 }}㎍/㎥</dd>
         </div>
       </dl>
 
@@ -63,6 +84,7 @@ const goDashboard = () => {
         >
           생활 날씨 브리핑
         </RouterLink>
+        <RouterLink :to="{ name: 'WeatherLive' }">실시간 관측</RouterLink>
         <RouterLink
           :to="{
             name: 'WeatherCompare',
@@ -104,15 +126,21 @@ h1 {
   margin: 0;
 }
 
+.source-line {
+  margin: 0 0 24px;
+  color: #636e72;
+  font-size: 13px;
+}
+
 .weather-status {
-  margin: 12px 0 24px;
+  margin: 12px 0 4px;
   font-size: 28px;
   font-weight: 700;
 }
 
 .observation-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin: 0 0 24px;
 }

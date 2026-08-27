@@ -12,11 +12,15 @@ SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저�
 ## 실행 방법
 
 ```sh
-npm install     # 의존성 설치
-npm run dev     # 개발 서버 실행 (localhost:3000)
-npm run build   # 프로덕션 빌드
-npm run lint    # ESLint 검사
+npm install            # 의존성 설치
+cp .env.example .env   # OpenWeatherMap API 키 입력 (없어도 샘플 데이터로 동작)
+npm run dev            # 개발 서버 실행 (localhost:3000)
+npm run build          # 프로덕션 빌드
+npm run lint           # ESLint 검사
 ```
+
+> `.env` 는 `.gitignore` 로 커밋에서 제외됩니다. 키를 넣지 않으면 실시간 통신 대신
+> 저장된 샘플 관측값으로 화면이 동작하고, 상단에 `샘플 데이터` 배지가 표시됩니다.
 
 ## 프로젝트 구조
 
@@ -35,20 +39,26 @@ src/
 │     ├─ composition/         # Composition API (p.117~144)
 │     ├─ component/           # Vue Components (p.146~178)
 │     ├─ library/             # Pinia (p.199~211)
+│     ├─ axios/               # Axios (p.224~228)
 │     └─ handson/             # Hands on — Weather Mockup(p.116) · Weather Composition(p.145)
 │        └─ weather-component/ # Hands on — Weather Component(p.178)
+├─ api/
+│  ├─ http.js                 # axios.create + 요청/응답 인터셉터 (공통 통신 계층)
+│  ├─ openWeather.js          # 현재 날씨 · 5일 예보 · 대기질
+│  └─ openMeteo.js            # 교차 검증용 외부 API (키 불필요)
 ├─ data/
-│  ├─ weather.js              # 대시보드·상세·비교·브리핑 View가 공유하는 Mock Data
+│  ├─ weather.js              # 도시 좌표 + 통신 실패 시 쓰는 Fallback 관측값
 │  └─ practices.js            # 실습 컴포넌트 주제별 레지스트리 (동적 import)
 ├─ router/index.js            # 지연 로딩·동적 경로·Catch-all Route
 ├─ stores/
 │  ├─ counter.js              # Code Challenge 스토어 (p.211)
 │  ├─ configStore.js          # 온도 단위·대시보드 설정·변경 이력 (p.212)
 │  ├─ favoriteStore.js        # 즐겨찾기 도시 — View 사이에서 공유
+│  ├─ weatherStore.js         # 실시간 관측값 + 실패 시 샘플 데이터 폴백 (p.230)
 │  └─ plugins.js              # Pinia Plugin — localStorage 영속 + 액션 이력
 ├─ composables/
 │  └─ useTemperature.js       # 온도 단위 변환 (p.212가 "범위 제외"로 남긴 부분)
-├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·Settings
+├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·Live·Settings
 │                             # PracticeIndex·PracticeTopic·NotFound
 └─ assets/ · utils/
 ```
@@ -1047,6 +1057,237 @@ _▲ `/settings` — `$onAction` 이 기록한 변경 이력(이전 → 이후)�
 
 > 💭 **회고** — 단위 변환 버그(트러블슈팅 17)를 잡는 데 가장 오래 걸렸다. **에러가 안 나고 그럴듯한 숫자가 나오는 버그**가 제일 무섭다는 걸 배웠다. Pinia Plugin 으로 저장 코드를 한 줄로 줄였을 때가 4일 중 가장 개운했다 — 교재대로면 액션마다 `setItem` 을 반복해야 했는데, 그 반복이 사라지는 게 눈에 보였다.
 
+---
+
+### 14. Axios — Code Challenge (p.213~229)
+
+`npm install axios` 후 교재 예제 두 개를 그대로 작성했다. `/practice/axios` 에서 볼 수 있다.
+
+| 파일                               | 교재      | 내용                                          |
+| ---------------------------------- | --------- | --------------------------------------------- |
+| `practices/axios/AxiosWeather.vue` | p.224~225 | OpenWeatherMap 현재 날씨 호출 (`async/await`) |
+| `practices/axios/AxiosJson.vue`    | p.228     | JSON Placeholder CRUD (GET·POST·PUT·DELETE)   |
+
+교재 코드에서 **한 군데만 바꿨다.**
+
+```js
+// 교재 p.224 — 소스에 키가 그대로 박혀 있다
+const API_KEY = '8964edc63b366d27b5b728b7976570b7'
+
+// 이 저장소는 Public 이라 .env 로 뺐다 (.gitignore 에 등록, .env.example 만 커밋)
+const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
+```
+
+Vite 는 `VITE_` 접두사가 붙은 변수만 클라이언트에 노출한다. 접두사를 빼면 `undefined` 가 되어
+401 이 떨어진다. 다만 **프런트엔드로 내려간 키는 브라우저 네트워크 탭에서 그대로 보인다** —
+`.env` 는 저장소 유출을 막을 뿐이고, 실서비스라면 키를 감추는 백엔드 프록시가 따로 필요하다.
+
+CRUD 4종은 JSON Placeholder 특성상 서버에 실제로 반영되지 않는다. POST 는 항상 `id: 101` 을
+붙여 돌려주고, DELETE 는 빈 객체를 준다. 그래서 **응답을 받은 뒤 화면 배열을 직접 갱신**해야
+목록이 움직인다 (`unshift` / `map` / `filter`).
+
+---
+
+### 15. Hands on — Weather Axios (p.230)
+
+교재 요구사항 3개를 모두 구현하고, 그 위에 개인 응용 7건을 얹었다.
+
+| 요구사항                 | 구현                                                                    |
+| ------------------------ | ----------------------------------------------------------------------- |
+| 1. 실제 날씨 데이터 적용 | `weatherStore` 가 대시보드·상세·비교·브리핑 **4개 화면의 Mock 을 대체** |
+| 2. OpenWeather API 추가  | 현재 날씨 + **5일 예보(`/forecast`)** + **대기질(`/air_pollution`)**    |
+| 3. 기타 외부 API 추가    | **Open-Meteo**(키 불필요)로 같은 좌표를 교차 검증                       |
+
+새 화면은 `/live` **실시간 관측** 한 장이고, 기존 화면들은 데이터 출처만 바뀌었다.
+
+```
+src/api/
+├─ http.js          # axios.create + 요청/응답 인터셉터 (공통 계층)
+├─ openWeather.js   # 현재 날씨 · 예보 · 대기질
+└─ openMeteo.js     # 교차 검증용 외부 API (키 없음)
+src/stores/weatherStore.js   # 실시간 관측 상태 + 실패 시 샘플 데이터 폴백
+src/views/WeatherLiveView.vue
+```
+
+#### Customization ㉟ 공통 통신 계층 — `axios.create` + 인터셉터
+
+교재 p.222 는 Axios 의 장점으로 **BaseURL 설정**과 **요청/응답 인터셉터**를 표에 못 박아 놓고,
+정작 예제(p.224·p.228)는 전부 전체 URL 을 문자열로 이어 붙인 `axios.get` 이다. 표에만 있는 기능을
+실제로 붙여 봤다.
+
+```js
+// api/http.js
+client.interceptors.request.use((config) => {
+  config.metadata = { startedAt: performance.now() } // 소요 시간 측정 시작
+  return decorate(config) // 키·단위·언어 자동 주입
+})
+```
+
+호출부에서 사라진 것:
+
+```js
+// 인터셉터 도입 전 — 호출할 때마다 반복
+;`...?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=kr`
+
+// 도입 후 — 좌표만 넘긴다
+client.get('/weather', { params: { lat, lon } })
+```
+
+`appid` · `units` · `lang` 세 개를 요청 4종(현재·예보·대기질·교차검증)에 매번 적지 않아도 되고,
+**단위를 metric 에서 다른 값으로 바꿔야 할 때 고칠 곳이 한 줄**이 됐다.
+
+#### Customization ㊱ 응답 인터셉터의 에러 표준화 — 실패 원인을 화면에서 구분한다
+
+교재 p.224 의 `catch` 는 원인과 무관하게 같은 문구를 띄운다.
+
+```js
+alert('데이터를 가져오지 못했습니다. API 키 활성화 여부나 주소를 확인하세요.')
+```
+
+키가 틀린 건지, 오프라인인지, 호출 한도를 넘긴 건지 사용자도 개발자도 알 수 없다. 응답
+인터셉터에서 **상태 코드를 안내 문구로 바꿔** 던지도록 했다.
+
+| 상황              | 표준화된 결과                                                            |
+| ----------------- | ------------------------------------------------------------------------ |
+| 401               | `client` · API 키가 잘못되었거나 아직 활성화되지 않았습니다 (최대 2시간) |
+| 404               | `client` · 요청한 엔드포인트를 찾을 수 없습니다                          |
+| 429               | `client` · 무료 요금제 호출 한도(분당 60회)를 넘었습니다                 |
+| 5xx               | `server` · 기상 서버에 문제가 있습니다                                   |
+| 응답 없음         | `network` · 네트워크에 연결할 수 없습니다                                |
+| 제한 시간 초과    | `timeout` · 응답이 제한 시간을 넘겨 중단했습니다                         |
+| `AbortController` | `canceled` · 새 요청이 들어와 이전 요청을 취소했습니다                   |
+
+덕분에 화면 코드는 `error.response?.status` 를 뒤지지 않고 `error.message` 만 쓴다.
+`/live` 하단에 **일부러 401·404 를 내는 버튼**을 두어 변환 결과를 눈으로 확인할 수 있게 했다.
+
+#### Customization ㊲ 동시 조회 vs 순차 조회 — `axios.all` · `axios.spread` 실측
+
+p.226 표에 `axios.all([...])` 와 `axios.spread(callback)` 이 있지만 예제는 없다. 도시 5곳의
+현재 날씨 + 예보를 가져오려면 요청이 10건 필요해서, 두 방식의 차이가 실제로 드러난다.
+
+```js
+export const fetchAllCities = (cities, config) =>
+  axios.all(cities.map((city) => fetchCityWeather(city, config)))
+```
+
+`/live` 에서 측정한 값:
+
+```
+동시 조회   418ms
+순차 조회  1053ms
+속도 차이   2.5배
+```
+
+요청 1건이 200ms 대인데 순차로 돌리면 그게 그대로 더해진다. 도시가 늘수록 격차도 비례해서
+벌어진다. 앱 진입 시 대시보드 동기화는 물론 동시 조회 쪽을 쓴다.
+
+`axios.spread` 는 도시 상세에서 4개 응답을 이름으로 받는 데 썼다.
+
+```js
+axios
+  .all([fetchCurrent(city), fetchForecast(city), fetchAirPollution(city), fetchCrossCheck(city)])
+  .then(axios.spread((current, forecast, air, cross) => ({ current, forecast, air, cross })))
+```
+
+#### Customization ㊳ 이전 요청 취소 — `AbortController`
+
+교재에는 취소 개념이 아예 없다. 도시 버튼을 빠르게 눌러 보면 문제가 바로 보인다 —
+**먼저 보낸 요청이 늦게 도착하면 나중 도시의 화면을 덮어쓴다.** 관측값이 도시와 어긋나는데
+에러는 하나도 안 난다.
+
+```js
+activeController?.abort() // 이전 도시 요청 취소
+const controller = new AbortController()
+activeController = controller
+await axios.all([fetchCurrent(city, { signal: controller.signal }), …])
+```
+
+취소는 `catch` 로 들어오지만 **실패가 아니다.** 인터셉터가 `kind: 'canceled'` 로 분류해 주므로
+화면에서는 에러 문구 대신 취소 건수만 센다. 로딩 상태도 `if (activeController === controller)`
+로 최신 요청만 해제하게 했다 — 안 그러면 취소된 요청이 진행 중인 요청의 로딩을 꺼 버린다.
+
+#### Customization ㊴ 추가 API 를 판단에 연결 — 예보(`pop`) · 대기질(`aqi`)
+
+요구사항 2를 "화면에 항목 몇 개 더 찍기"로 끝내지 않고, **기존 브리핑 판정에 물렸다.**
+
+- **강수확률** — 현재 날씨 API 응답에는 `pop` 이 없다(트러블슈팅 22). `/forecast` 의 앞으로
+  24시간 8구간 중 최댓값을 대표값으로 삼아 `city.precipitation` 을 채운다. 이 값이 그대로
+  브리핑의 우산·빨래 판정에 쓰인다.
+- **대기질** — `/air_pollution` 은 좌표는 같은데 응답 규격이 완전히 다르다. 지수 1~5 를 한국어
+  등급으로 바꾸고, **야외 운동 판정에 규칙 한 줄을 추가**했다.
+
+```js
+{ points: 2, test: (city) => (city.aqi ?? 0) >= 4, title: '대기질이 나쁩니다.' }
+```
+
+`?? 0` 이 필요한 이유 — 대기질은 상세·브리핑 화면에서만 뒤늦게 불러온다. 도착 전에는
+`undefined` 라 `undefined >= 4` 가 되어 조용히 `false` 가 되는데, 이 경우 **"판정 안 함"과
+"괜찮음"이 구분되지 않는다.** 실패해도 본문 관측값은 그대로 보이게 두되(부가 정보이므로),
+값이 없을 때 위험이 없는 것처럼 보이지 않도록 기본값을 명시했다.
+
+#### Customization ㊵ 다른 기관 값과 교차 검증 — Open-Meteo (요구사항 3)
+
+요구사항 3의 "기타 외부 API" 로 **Open-Meteo** 를 골랐다. 키가 필요 없어서 API 키 없이도
+`/live` 의 한 칸은 항상 동작한다는 점이 좋았다. 같은 좌표를 두 기관에 물어 차이를 보여준다.
+
+```
+현재 관측 30℃ (OpenWeather)   ·   다른 기관 29℃ (Open-Meteo)   ·   차이 -1℃
+```
+
+여기서 두 가지를 배웠다.
+
+- **단위 규약이 API 마다 다르다.** Open-Meteo 의 풍속 기본 단위는 km/h 라서 그대로 비교하면
+  OpenWeather(m/s)와 3.6배 어긋난다(트러블슈팅 21). `wind_speed_unit: 'ms'` 로 맞춰서 받는다.
+- **온도 "차이" 는 `formatDelta` 로 찍어야 한다.** 절대값 변환식(`×9/5 + 32`)을 차이에 쓰면
+  −1℃ 차이가 화씨에서 30℉ 로 나온다. 단원 13에서 만든 `useTemperature()` 가 여기서 그대로 쓰였다.
+
+#### Customization ㊶ 통신이 실패해도 화면이 비지 않는다 — 샘플 데이터 폴백
+
+교재 예제는 실패하면 `alert` 하나 띄우고 화면은 빈 상태로 남는다. 제출용 앱에서는
+**API 키가 없거나 호출 한도를 넘겼을 때도 화면이 돌아가야 한다.**
+
+```js
+try {
+  liveById.value = …            // 성공 → 실시간 값이 샘플 값 위에 덮인다
+  status.value = 'live'
+} catch (error) {
+  errorMessage.value = error.message  // 인터셉터가 만든 문구를 그대로
+  status.value = 'fallback'           // 샘플 값이 그대로 남는다
+}
+```
+
+화면은 실시간인지 샘플인지 **항상 배지로 밝힌다** — `실시간 · 11:23 기준` / `샘플 데이터 (API 키
+미설정)` / `샘플 데이터 (실시간 연결 실패)`. 브리핑 하단 면책 문구도 데이터 출처에 따라 바뀐다.
+값이 어디서 왔는지 숨기지 않는 게 날씨 앱에서는 기능 하나보다 중요하다고 봤다.
+
+#### Customization ㊷ 상태 문자열이 아니라 분류 코드로 판단한다
+
+이건 실제 API 를 붙이자마자 터진 문제다(트러블슈팅 19). Mock 시절의 판정 규칙은 이랬다.
+
+```js
+test: (city) => ['비', '소나기'].includes(city.status)
+```
+
+Mock 의 상태 문자열은 5종이라 이게 통했지만, OpenWeather 의 `lang=kr` 설명은 `온흐림`·`실비`·
+`실비를 동반한 천둥번개` 처럼 수십 종이다. **비가 오는데 판정이 조용히 통과된다.**
+
+```js
+// weather[0].id 대역으로 분류 — 2xx 뇌우 / 3xx 이슬비 / 5xx 비 / 6xx 눈 / 800 맑음
+export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(city.condition)
+```
+
+표시용 문자열(`status`)과 판정용 코드(`condition`)를 분리하고, Mock 데이터에도 같은 `condition`
+을 부여해 **두 출처가 같은 규칙을 타게** 했다.
+
+> 📌 알게 된 점 — 이번 단원에서 손이 제일 많이 간 건 `axios.get` 이 아니라 **그 주변**이었다.
+> 통신 자체는 한 줄인데, 실패·취소·단위·출처 표시가 전부 화면 품질로 이어졌다. 교재가
+> "Axios 는 인터셉터를 지원한다"고 표로만 적어 둔 이유를 붙여 보고 나서야 알았다.
+
+> 💭 **회고** — Mock 을 실제 API 로 바꾸는 작업이 단순 치환일 줄 알았는데 아니었다. 값의
+> **모양**(문자열 종류, 없는 필드, 단위)이 달라서, 4일간 쌓아 온 판정 로직이 에러 없이
+> 조용히 틀리기 시작했다. 트러블슈팅 17(화씨 차이)과 19(상태 문자열)가 같은 종류의 버그다 —
+> **연동은 데이터를 받아오는 일이 아니라, 남의 데이터 규약에 내 로직을 맞추는 일**이었다.
+
 ## 적용한 Vue 문법 정리
 
 지금까지 실습에서 **실제로 써 본 것**을 어디에 썼는지와 함께 정리했다.
@@ -1148,6 +1389,22 @@ _▲ `/settings` — `$onAction` 이 기록한 변경 이력(이전 → 이후)�
 | `$patch()`                    | `stores/plugins.js` `SettingsView`               | 여러 state 일괄 변경 — 복원·되돌리기                     |
 | Pinia Plugin (`pinia.use()`)  | `stores/plugins.js`                              | `persist` · `trackActions` 옵션으로 공통 기능 주입       |
 | Composable (`use…()`)         | `composables/useTemperature.js`                  | 온도 변환 로직을 6개 파일이 공유 (절대값 vs 차이값 분리) |
+
+### Axios · 외부 API 통신
+
+| 문법                         | 쓴 곳                               | 무엇에 썼나                                     |
+| ---------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `axios.get/post/put/delete`  | `AxiosWeather` `AxiosJson`          | REST CRUD 4종 (JSON Placeholder)                |
+| `async/await` + `try/catch`  | `api/*` `weatherStore` `LiveView`   | 비동기 통신과 실패 처리                         |
+| `axios.create()`             | `api/http.js`                       | BaseURL·타임아웃을 가진 제공자별 인스턴스       |
+| `interceptors.request`       | `api/http.js`                       | 키·단위·언어 자동 주입, 소요 시간 측정 시작     |
+| `interceptors.response`      | `api/http.js`                       | 통신 기록 적재, 상태 코드 → 안내 문구 표준화    |
+| `axios.all()`                | `openWeather.js` `WeatherLiveView`  | 도시 5곳 병렬 조회 (순차 대비 2.5배)            |
+| `axios.spread()`             | `openWeather.js` `WeatherLiveView`  | 여러 응답을 이름으로 분해                       |
+| `axios.isCancel()`           | `api/http.js`                       | 취소를 실패와 구분                              |
+| `AbortController` / `signal` | `WeatherLiveView`                   | 이전 요청 취소 — 늦은 응답의 화면 덮어쓰기 방지 |
+| `params` 옵션                | `api/*`                             | Query String 을 문자열 연결 없이 전달           |
+| `import.meta.env.VITE_*`     | `api/openWeather.js` `AxiosWeather` | API 키를 소스에서 분리 (`.env`)                 |
 
 ### 스타일
 
@@ -1427,6 +1684,83 @@ _▲ 서울 82℉ · 수원 75℉ 인데 **기온 차이는 39℉** — 두 값�
 > 다르다는 점이 여기서 그대로 쓸모가 됐다. 되돌리기처럼 **기록에 남기고 싶지 않은 변경**은
 > 액션이 아닌 경로로 넣으면 된다.
 
+### 19. 실제 API 를 붙이자 브리핑 판정이 조용히 통과된다
+
+Mock 을 실시간 데이터로 바꾼 직후, 비가 오는 도시인데 빨래 브리핑이 "활동하기 좋음" 으로 나왔다.
+에러도 경고도 없었다. 원인은 판정 규칙의 문자열 비교였다.
+
+```js
+test: (city) => ['비', '소나기'].includes(city.status)
+```
+
+Mock 의 `status` 는 5종(`맑음`·`비`·`구름`·`흐림`·`소나기`)뿐이라 통했지만, OpenWeather 의
+`lang=kr` 설명은 `온흐림`·`실비`·`튼구름`·`약간의 비` 처럼 수십 종이다. **비가 와도 `'비'` 와
+글자가 다르면 규칙이 안 걸린다.**
+
+응답의 `weather[0].id` 는 대역이 정해져 있다 — 2xx 뇌우 / 3xx 이슬비 / 5xx 비 / 6xx 눈 /
+7xx 대기현상 / 800 맑음 / 80x 구름. 이걸 `condition` 으로 정규화하고 Mock 데이터에도 같은 값을
+넣어, **두 데이터 출처가 같은 규칙을 타게** 했다.
+
+```js
+export const isRainy = (city) => ['rain', 'drizzle', 'thunderstorm'].includes(city.condition)
+```
+
+> 📌 알게 된 점 — 표시용 문자열로 로직을 짜면 안 된다. **사람이 읽는 값과 코드가 판단하는 값은
+> 분리**해야 한다. 언어 설정(`lang`)만 바꿔도 깨질 코드였다.
+
+### 20. 도시를 빠르게 바꾸면 다른 도시의 관측값이 보인다
+
+`/live` 에서 도시 버튼을 연달아 누르면, 화면에는 마지막 도시가 선택돼 있는데 관측값은 이전
+도시 것이 남았다. **먼저 보낸 요청이 늦게 도착해 나중 응답을 덮어쓰는** 경쟁 상태다. 요청이
+빠를 땐 재현이 안 되고, 느릴 때만 가끔 나타나서 더 까다로웠다.
+
+`AbortController` 로 새 요청을 보내기 전에 이전 요청을 취소했다. 여기서 두 번 더 막혔다.
+
+- 취소가 `catch` 로 들어와 **화면에 빨간 에러가 떴다.** 취소는 실패가 아니므로 인터셉터에서
+  `axios.isCancel(error)` 로 `kind: 'canceled'` 를 붙여 분리했다.
+- 취소된 요청의 `finally` 가 **진행 중인 요청의 로딩 표시를 꺼 버렸다.**
+  `if (activeController === controller)` 로 최신 요청만 상태를 만지게 했다.
+
+### 21. Open-Meteo 풍속이 OpenWeather 의 3.6배로 나온다
+
+교차 검증 화면에서 기온·습도는 비슷한데 풍속만 1.1 vs 4.0 처럼 크게 벌어졌다. 계산 실수가
+아니라 **단위 규약 차이**였다 — OpenWeather 는 m/s, Open-Meteo 는 기본이 km/h 다 (3.6배).
+
+```js
+params: { …, wind_speed_unit: 'ms' }   // 받아올 때부터 단위를 맞춘다
+```
+
+받은 뒤에 3.6 으로 나누는 대신 요청 파라미터로 맞췄다. 화면 코드에 변환 상수가 떠다니지 않는다.
+
+> 📌 알게 된 점 — 트러블슈팅 17(화씨 차이)과 같은 계열의 버그다. **숫자는 왔는데 의미가 다른**
+> 경우가 통신에서 제일 자주 나온다. 응답 필드 이름이 같다고 같은 값이 아니다.
+
+### 22. 강수확률이 계속 0% 로 나온다
+
+`/weather`(현재 날씨) 응답에는 **강수확률(`pop`)이 없다.** `rain` 필드는 "지난 1시간 강수량"
+이지 확률이 아니다. 없는 필드를 읽어 `undefined` 가 되고, 화면에는 0% 로 찍혔다.
+
+강수확률은 `/forecast`(3시간 간격 예보)에만 있다. 그래서 도시 1곳당 현재+예보 2건을 함께 받아
+앞으로 24시간 8구간 중 **최댓값**을 대표값으로 쓴다. 요청이 2배가 되므로 5개 도시를 `axios.all`
+로 병렬 처리하는 게 이때부터 선택이 아니라 필수가 됐다.
+
+### 23. 스토어를 옮겼더니 `Cannot access 'weatherStore' before initialization`
+
+`WeatherCompareView` 의 데이터 출처를 `weatherStore` 로 바꾸자 화면이 통째로 죽었다.
+
+```js
+const validCityId = (value, fallback) => (weatherStore.findCity(value) ? value : fallback)
+const leftCityId = ref(validCityId(route.query.left, 'city_01')) // ← 여기서 즉시 호출된다
+const weatherStore = useWeatherStore() // ← 선언은 그 아래
+```
+
+`const` 는 호이스팅되지만 초기화 전에는 접근할 수 없다(TDZ). 함수 **선언** 위치가 아니라
+**호출** 시점이 기준이라, `ref()` 초기값을 만드는 그 줄에서 터졌다. `useWeatherStore()` 를
+`useRoute()` 옆으로 올려 해결했다.
+
+> 📌 알게 된 점 — `<script setup>` 은 위에서 아래로 한 번 실행되는 코드다. 컴포넌트 파일이라
+> 순서가 상관없을 것 같지만, **`ref()` 초기값 계산은 그 자리에서 즉시 일어난다.**
+
 ## 4일간의 회고
 
 ### 가장 오래 막혔던 것 — 에러가 안 나는 버그
@@ -1481,11 +1815,15 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 
 ### 남은 과제
 
-| 항목                    | 상태                                                           |
-| ----------------------- | -------------------------------------------------------------- |
-| Axios (교재 p.213~230)  | 미착수 — API 키는 `.env` 로 분리 예정 (`.gitignore` 등록 완료) |
-| UI Library (p.231~249)  | 미착수                                                         |
-| 빌드 · 배포 (p.250~274) | 미착수 — History Mode 를 쓰므로 SPA fallback 설정이 필수다     |
+| 항목                    | 상태                                                       |
+| ----------------------- | ---------------------------------------------------------- |
+| Axios (교재 p.213~230)  | ✅ 완료 — 키는 `.env` 로 분리, 실패 시 샘플 데이터 폴백    |
+| UI Library (p.231~249)  | 미착수                                                     |
+| 빌드 · 배포 (p.250~274) | 미착수 — History Mode 를 쓰므로 SPA fallback 설정이 필수다 |
+
+배포 시 호스팅(Vercel / Netlify / GitHub Pages)의 환경 변수 설정에
+`VITE_OPENWEATHER_API_KEY` 를 등록해야 실시간 데이터가 뜬다. 등록하지 않아도 앱은
+샘플 데이터로 동작하지만 배지가 `샘플 데이터` 로 남는다.
 
 배포까지 마치면 위쪽 **배포 주소** 칸을 채운다.
 

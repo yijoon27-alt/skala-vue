@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { weatherCities } from '@/data/weather'
+import { useWeatherStore } from '@/stores/weatherStore'
 
 export const useFavoriteStore = defineStore(
   'favorite',
@@ -11,8 +11,9 @@ export const useFavoriteStore = defineStore(
     // 2. Getters
     const count = computed(() => ids.value.length)
     const isFavorite = computed(() => (cityId) => ids.value.includes(cityId))
+    // 즐겨찾기 목록에도 실시간 관측값이 그대로 보이도록 weatherStore 를 거친다
     const favoriteCities = computed(() =>
-      weatherCities.filter((city) => ids.value.includes(city.id)),
+      useWeatherStore().cities.filter((city) => ids.value.includes(city.id)),
     )
 
     // 3. Actions
