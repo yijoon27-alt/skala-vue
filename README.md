@@ -66,22 +66,28 @@ src/
 ├─ views/                     # WeatherHome·Detail·About·Compare·Briefing·Live·Settings
 │                             # PracticeIndex·PracticeTopic·NotFound
 └─ assets/ · utils/
+
+.env             # API 키 (커밋 제외)
+.env.example     # 키 없는 템플릿
+.env.staging     # 검증 빌드용 API 주소
+.env.production  # 상용 빌드용 API 주소
 ```
 
 `App.vue`는 상단 메뉴(`TheHeader`)와 페이지 렌더링 영역(`RouterView`)을 배치하는 역할만 하고,
-네비게이션 마크업과 스타일은 `TheHeader.vue`가 가집니다. 대시보드·도시 비교·실습 모음·
-서비스 소개 화면을 새로고침 없이 전환합니다.
+네비게이션 마크업과 스타일은 `TheHeader.vue`가 가집니다. 날씨 대시보드 · 도시 상세 · 실시간 관측 ·
+도시 비교 · 생활 날씨 브리핑 · 환경설정 · 실습 아카이브 · 서비스 소개 화면을 새로고침 없이 전환합니다.
 
 ---
 
 ## 단원별 실습 기록
 
-### 1. Vue Syntax — Dev Setup (p.69~71)
+### 1. Vue Syntax — Dev Setup (p.69~72)
 
-| 교재    | 실습 내용                                        | 파일                            |
-| ------- | ------------------------------------------------ | ------------------------------- |
-| p.69~70 | 반응형 데이터(Reactivity) — 일반 변수 vs `ref()` | `practices/basic/SampleOne.vue` |
-| p.71    | Text Interpolation — 표현식 사용                 | `practices/basic/SampleTwo.vue` |
+| 교재     | 실습 내용                                                            | 파일                            |
+| -------- | -------------------------------------------------------------------- | ------------------------------- |
+| p.69~70  | 반응형 데이터(Reactivity) — 일반 변수 vs `ref()`                     | `practices/basic/SampleOne.vue` |
+| p.71     | Text Interpolation — 표현식 사용                                     | `practices/basic/SampleTwo.vue` |
+| **p.72** | **Code Challenge** — 반응성 데이터 + Text Interpolation 두 예제 작성 | 위 두 파일                      |
 
 **Customization**
 
@@ -90,24 +96,25 @@ src/
 
 > 💭 **회고** — 첫날은 디렉티브가 그냥 'HTML 에 붙이는 속성' 으로만 보였다. 태그를 옮겨 적는 작업에 가까웠고, 왜 이게 프레임워크씩이나 되는지 실감이 안 났다.
 
-### 2. Vue Syntax — Vue Directive (p.74~92)
+### 2. Vue Syntax — Vue Directive (p.74~93)
 
-| 교재 | 실습 내용                               | 파일                                     |
-| ---- | --------------------------------------- | ---------------------------------------- |
-| p.74 | `v-html` — 문자열을 HTML로 해석         | `practices/directive/VHtmlSample.vue`    |
-| p.75 | `v-html` 의 XSS 취약점                  | `practices/directive/VHtmlXssSample.vue` |
-| p.76 | `v-text` — `innerText` 와 동일 동작     | `practices/directive/VTextSample.vue`    |
-| p.77 | `v-bind` 기본 — href / src / disabled   | `practices/directive/VBindBasic.vue`     |
-| p.79 | `v-bind` 클래스 바인딩 (객체 · 배열)    | `practices/directive/VBindClass.vue`     |
-| p.81 | `v-bind` 스타일 바인딩 (객체 · 배열)    | `practices/directive/VBindStyle.vue`     |
-| p.83 | `v-bind` same-name shorthand (Vue 3.4+) | `practices/directive/VBindShorthand.vue` |
-| p.84 | `v-if` / `v-else-if` / `v-else`         | `practices/directive/VIfSample.vue`      |
-| p.85 | `v-show` — CSS `display:none` 으로 숨김 | `practices/directive/VShowSample.vue`    |
-| p.88 | `v-for` — 배열 · 객체 · 배열 내 객체    | `practices/directive/VForSample.vue`     |
-| p.89 | `v-pre` — 컴파일 건너뛰기               | `practices/directive/VPreSample.vue`     |
-| p.90 | `v-cloak` — 렌더링 전 깜빡임 방지       | `practices/directive/VCloakSample.vue`   |
-| p.91 | `v-once` — 최초 1회만 렌더링            | `practices/directive/VOnceSample.vue`    |
-| p.92 | `v-memo` — 지정 변수가 바뀔 때만 갱신   | `practices/directive/VMemoSample.vue`    |
+| 교재     | 실습 내용                                         | 파일                                     |
+| -------- | ------------------------------------------------- | ---------------------------------------- |
+| p.74     | `v-html` — 문자열을 HTML로 해석                   | `practices/directive/VHtmlSample.vue`    |
+| p.75     | `v-html` 의 XSS 취약점                            | `practices/directive/VHtmlXssSample.vue` |
+| p.76     | `v-text` — `innerText` 와 동일 동작               | `practices/directive/VTextSample.vue`    |
+| p.77     | `v-bind` 기본 — href / src / disabled             | `practices/directive/VBindBasic.vue`     |
+| p.79     | `v-bind` 클래스 바인딩 (객체 · 배열)              | `practices/directive/VBindClass.vue`     |
+| p.81     | `v-bind` 스타일 바인딩 (객체 · 배열)              | `practices/directive/VBindStyle.vue`     |
+| p.83     | `v-bind` same-name shorthand (Vue 3.4+)           | `practices/directive/VBindShorthand.vue` |
+| p.84     | `v-if` / `v-else-if` / `v-else`                   | `practices/directive/VIfSample.vue`      |
+| p.85     | `v-show` — CSS `display:none` 으로 숨김           | `practices/directive/VShowSample.vue`    |
+| p.88     | `v-for` — 배열 · 객체 · 배열 내 객체              | `practices/directive/VForSample.vue`     |
+| p.89     | `v-pre` — 컴파일 건너뛰기                         | `practices/directive/VPreSample.vue`     |
+| p.90     | `v-cloak` — 렌더링 전 깜빡임 방지                 | `practices/directive/VCloakSample.vue`   |
+| p.91     | `v-once` — 최초 1회만 렌더링                      | `practices/directive/VOnceSample.vue`    |
+| p.92     | `v-memo` — 지정 변수가 바뀔 때만 갱신             | `practices/directive/VMemoSample.vue`    |
+| **p.93** | **Code Challenge** — 위 디렉티브 14종을 모두 작성 | `practices/directive/` 14개 파일         |
 
 #### Customization ① `VHtmlXssSample.vue` — sanitize로 XSS 막기
 
@@ -713,14 +720,14 @@ watch(
 
 `App.vue`를 단일 실습 컴포넌트 진입점에서 라우터 레이아웃으로 전환했다.
 
-| 요구사항                                | 구현                                                                                         |
-| --------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 1. Router 지연 로딩 + Catch-all         | Home 외 View를 Dynamic Import하고 `/:pathMatch(.*)*`를 마지막에 배치                         |
-| 2. `App.vue` Navigation Bar + 메인 영역 | 상단 메뉴를 `TheHeader` 컴포넌트로 분리하고 `App.vue`에 `TheHeader` + `RouterView` 배치      |
-| 3. `WeatherHomeView`                    | `WeatherParent`의 검색·카드·요약 구조를 View로 전환하고 `router.push('/weather/' + id)` 처리 |
-| 4. `WeatherDetailView`                  | `route.params.cityId`로 Mount 시점에 Mock Data 도시를 선택하고 기온·체감·습도·풍속 표시      |
-| 5. `WeatherAboutView`                   | 서비스·Router 구조 소개와 `router.push()` 메인 복귀 버튼                                     |
-| 6. 추가 View + Routing                  | `/compare` 경로의 `WeatherCompareView` 추가                                                  |
+| 요구사항                                | 구현                                                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1. Router 지연 로딩 + Catch-all         | Home 외 View를 Dynamic Import하고 `/:pathMatch(.*)*`를 마지막에 배치                                              |
+| 2. `App.vue` Navigation Bar + 메인 영역 | 상단 메뉴를 `TheHeader` 컴포넌트로 분리하고 `App.vue`에 `TheHeader` + `RouterView` 배치                           |
+| 3. `WeatherHomeView`                    | `WeatherParent`의 검색·카드·요약 구조를 View로 전환하고 `router.push('/weather/' + id)` 처리                      |
+| 4. `WeatherDetailView`                  | `route.params.cityId`로 도시를 선택해 기온·체감·습도·풍속 표시 (이 시점의 값은 Mock, 단원 15에서 실시간으로 교체) |
+| 5. `WeatherAboutView`                   | 서비스·Router 구조 소개와 `router.push()` 메인 복귀 버튼                                                          |
+| 6. 추가 View + Routing                  | `/compare` 경로의 `WeatherCompareView` 추가                                                                       |
 
 ![`/` 날씨 대시보드 — 검색·즐겨찾기·정렬·집계](docs/images/run-home-dashboard.png)
 
@@ -774,8 +781,9 @@ _▲ `/compare?left=city_01&right=city_04` — 선택한 도시가 URL 쿼리에
 - 위험 이유를 점수로만 표시하지 않고, 관측값을 포함한 행동 가이드와 우산·생수·외투 등 준비물을 함께 표시한다.
 - 대시보드와 도시 상세 View에 진입 링크를 추가하고, 잘못된 도시 ID에도 별도 안내 화면을 보여 준다.
 
-> ⚠️ 현재 위험도는 실습용 Mock Data와 자체 임계값으로 산출한 생활 판단 보조 정보이며,
-> 기상청의 공식 기상특보를 대체하지 않는다. Axios 단원에서 실제 데이터로 교체할 수 있도록 규칙과 표현을 분리했다.
+> ⚠️ 위험도는 자체 임계값으로 산출한 생활 판단 보조 정보이며, 기상청의 공식 기상특보를
+> 대체하지 않는다. 규칙과 데이터 출처를 분리해 둔 덕분에, **Axios 단원에서 관측값만
+> 실시간으로 갈아 끼우고 판정 규칙은 그대로 재사용**할 수 있었다 (단원 15).
 
 ![`/briefing/city_01?activity=commute` — 관측값을 출퇴근 행동 가이드로 변환](docs/images/run-briefing.png)
 
@@ -2177,7 +2185,7 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 
 ### 교재 밖에서 배운 것 — 응용 아이디어는 어디서 나오는가
 
-개인 응용 34건을 만들면서, 없는 걸 새로 상상하는 방식은 거의 실패했다.
+개인 응용 48건을 만들면서, 없는 걸 새로 상상하는 방식은 거의 실패했다.
 잘 나온 것들은 전부 **교재가 이미 열어 놓고 닫지 않은 자리**에서 나왔다.
 
 - **표와 예제의 간격** — 이벤트 수식어 표엔 4개인데 예제엔 2개 (⑤), 이벤트 8종 표에 예제는 `@click` 하나 (③)
@@ -2189,11 +2197,11 @@ _"교재대로 쓰면 컴파일 에러가 난다"_ 고 적어 뒀는데, 캡처�
 
 ### 남은 과제
 
-| 항목                    | 상태                                                       |
-| ----------------------- | ---------------------------------------------------------- |
-| Axios (교재 p.213~230)  | ✅ 완료 — 키는 `.env` 로 분리, 실패 시 샘플 데이터 폴백    |
-| UI Library (p.231~249)  | 미착수                                                     |
-| 빌드 · 배포 (p.250~274) | 미착수 — History Mode 를 쓰므로 SPA fallback 설정이 필수다 |
+| 항목                    | 상태                                                    |
+| ----------------------- | ------------------------------------------------------- |
+| Axios (교재 p.213~230)  | ✅ 완료 — 키는 `.env` 로 분리, 실패 시 샘플 데이터 폴백 |
+| UI Library (p.231~249)  | ✅ 완료 — Element Plus 를 대시보드·상세 화면에 적용     |
+| 빌드 · 배포 (p.250~274) | Code Challenge(p.270~273) ✅ / **배포만 남음**          |
 
 배포 시 호스팅(Vercel / Netlify / GitHub Pages)의 환경 변수 설정에
 `VITE_OPENWEATHER_API_KEY` 를 등록해야 실시간 데이터가 뜬다. 등록하지 않아도 앱은
