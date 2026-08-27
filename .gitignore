@@ -46,5 +46,5 @@ __screenshots__/
 !.env.staging
 !.env.production
 
-# Claude Code 작업 컨텍스트 (로컬 전용 - 제출 저장소에 올리지 않음)
+# 로컬 작업 메모 (제출 저장소에 올리지 않음)
 CLAUDE.md
