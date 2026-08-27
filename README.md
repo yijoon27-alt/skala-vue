@@ -3,7 +3,7 @@
 SK AX **Full-Stack Engineering / Frontend-framework: Vue.js** 과정 실습 저장소입니다.
 교재 실습 예제를 따라 작성하고, 각 단원마다 **개인 응용(Customization)** 을 덧붙여 정리합니다.
 
-- 교육생: 판교_1반_P033_허이준
+- 교육생: `판교_1반_P033_허이준`
 - 원본 소스: [bottletiger/skala-vue](https://github.com/bottletiger/skala-vue)
 - 배포 주소: **https://yijoon27-alt.github.io/skala-vue/** (GitHub Pages, `main` push 시 자동 배포)
 
